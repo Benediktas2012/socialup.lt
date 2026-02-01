@@ -56,6 +56,7 @@ button:hover{transform:scale(1.05);}
 .card h3{margin:0;color:#ffd700;}
 .card a{color:#00d4ff;text-decoration:none;}
 .count{font-size:14px;color:#eee;}
+.label{font-weight:bold;}
 .about-me{
   display:flex;
   gap:30px;
@@ -97,7 +98,7 @@ button:hover{transform:scale(1.05);}
       <h3>Pridėti naują veiklą</h3>
       <input type="text" id="newName" placeholder="Veiklos pavadinimas">
       <input type="number" id="newHours" placeholder="Valandų skaičius">
-      <input type="text" id="newDate" placeholder="Kada (pvz. Pirmadieniais)">
+      <input type="text" id="newDate" placeholder="Data / Kada (pvz. Pirmadieniais)">
       <input type="text" id="newDesc" placeholder="Aprašymas">
       <input type="text" id="newLocation" placeholder="Žemėlapio nuoroda">
       <button onclick="addActivity()">Pridėti veiklą</button>
@@ -128,8 +129,8 @@ button:hover{transform:scale(1.05);}
 
 <script>
 let activities = [
-  {id:1,name:"Pagalba senelių namuose",hours:8,date:"Antradieniais",description:"Bendravimas su senjorais",location:"https://maps.google.com"},
-  {id:2,name:"Pagalba vaikų dienos centre",hours:6,date:"Pirmadieniais",description:"Pagalba vaikams",location:"https://maps.google.com"}
+  {id:1,name:"Pagalba senelių namuose",hours:8,date:"Antradieniais 10:00-18:00",description:"Bendravimas su senjorais",location:"https://maps.google.com"},
+  {id:2,name:"Pagalba vaikų dienos centre",hours:6,date:"Pirmadieniais 09:00-15:00",description:"Pagalba vaikams",location:"https://maps.google.com"}
 ];
 
 // LOGIN
@@ -194,7 +195,7 @@ function toggleRegistration(activityId){
   renderActivities();
 }
 
-// RENDER VEIKLAS su registracijos skaičiumi
+// RENDER VEIKLAS su valandomis, data ir registracijos skaičiumi
 function renderActivities(){
   const regs = JSON.parse(localStorage.getItem("registrations")) || {};
   activitiesContainer.innerHTML = "";
@@ -206,8 +207,8 @@ function renderActivities(){
     div.className="card";
     div.innerHTML=`
       <h3>${a.name}</h3>
-      <p><b>Valandos:</b> ${a.hours}</p>
-      <p><b>Kada:</b> ${a.date}</p>
+      <p><span class="label">Valandos:</span> ${a.hours}</p>
+      <p><span class="label">Kada:</span> ${a.date}</p>
       <p>${a.description}</p>
       <p class="count">Užsiregistravusių: ${count}</p>
       <a href="${a.location}" target="_blank">📍 Žemėlapis</a>
