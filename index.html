@@ -87,6 +87,8 @@
   <!-- VEIKLOS -->
   <div id="activitiesSection" style="display:none;">
     <h1>Socialinės veiklos</h1>
+
+    <!-- Formą mato tik organizacija -->
     <div id="addActivityForm" style="display:none;">
       <h3>Pridėti naują veiklą</h3>
       <input type="text" id="newName" placeholder="Veiklos pavadinimas">
@@ -96,6 +98,7 @@
       <input type="text" id="newLocation" placeholder="Žemėlapio nuoroda">
       <button onclick="addActivity()">Pridėti veiklą</button>
     </div>
+
     <div class="activities" id="activitiesContainer"></div>
     <button class="logout" onclick="logout()">Atsijungti</button>
   </div>
@@ -148,7 +151,7 @@ function orgLogin(){
   localStorage.setItem("org", JSON.stringify({name,code}));
   loginSection.style.display = "none";
   activitiesSection.style.display = "block";
-  document.getElementById("addActivityForm").style.display = "block";
+  document.getElementById("addActivityForm").style.display = "block"; // tik organizacija mato formą
   renderActivities();
 }
 
@@ -159,7 +162,7 @@ function logout(){
   activitiesSection.style.display = "none";
 }
 
-// --- PRIDĖTI NAUJĄ VEIKLĄ ---
+// --- PRIDĖTI NAUJĄ VEIKLĄ (tik organizacija) ---
 function addActivity(){
   const org = JSON.parse(localStorage.getItem("org"));
   if(!org) return alert("Tik organizacijos gali pridėti veiklas");
@@ -178,11 +181,11 @@ function addActivity(){
   alert("Veikla pridėta!");
 }
 
-// --- REGISTRACIJOS FUNKCIJA ---
+// --- REGISTRACIJOS FUNKCIJA (tik asmuo) ---
 function toggleRegistration(activityId){
   const user = JSON.parse(localStorage.getItem("user"));
   if(!user) return alert("Prisijunkite kaip asmuo");
-  
+
   let regs = JSON.parse(localStorage.getItem("registrations")) || {};
   if(!regs[activityId]) regs[activityId] = [];
   if(regs[activityId].includes(user.name)){
