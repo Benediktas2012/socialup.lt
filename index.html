@@ -98,7 +98,7 @@ button:hover{transform:scale(1.05);}
       <h3>Pridėti naują veiklą</h3>
       <input type="text" id="newName" placeholder="Veiklos pavadinimas">
       <input type="number" id="newHours" placeholder="Valandų skaičius">
-      <input type="text" id="newDate" placeholder="Data / Kada (pvz. Pirmadieniais)">
+      <input type="text" id="newDate" placeholder="Data (pvz. 2026-02-30)">
       <input type="text" id="newDesc" placeholder="Aprašymas">
       <input type="text" id="newLocation" placeholder="Žemėlapio nuoroda">
       <button onclick="addActivity()">Pridėti veiklą</button>
@@ -114,13 +114,7 @@ button:hover{transform:scale(1.05);}
     <div>
       <h2>Apie mane</h2>
       <p>
-        Tai yra mano mokyklos projektas, tačiau noriu jį praplėsti į
-        socialinį projektą. Šio puslapio tikslas – padėti žmonėms
-        lengviau rasti socialines veiklas ir savanorystės galimybes.
-      </p>
-      <p>
-        Šiuo metu ieškau partnerių ir organizacijų, kurios norėtų
-        prisidėti prie šios idėjos vystymo.
+        Sveiki, aš esu Benediktas.
       </p>
     </div>
   </div>
@@ -129,8 +123,8 @@ button:hover{transform:scale(1.05);}
 
 <script>
 let activities = [
-  {id:1,name:"Pagalba senelių namuose",hours:8,date:"Antradieniais 10:00-18:00",description:"Bendravimas su senjorais",location:"https://maps.google.com"},
-  {id:2,name:"Pagalba vaikų dienos centre",hours:6,date:"Pirmadieniais 09:00-15:00",description:"Pagalba vaikams",location:"https://maps.google.com"}
+  {id:1,name:"Pagalba senelių namuose",hours:8,date:"2026-02-30 10:00-18:00",description:"Bendravimas su senjorais",location:"https://maps.google.com"},
+  {id:2,name:"Pagalba vaikų dienos centre",hours:6,date:"2026-03-01 09:00-15:00",description:"Pagalba vaikams",location:"https://maps.google.com"}
 ];
 
 // LOGIN
@@ -208,7 +202,7 @@ function renderActivities(){
     div.innerHTML=`
       <h3>${a.name}</h3>
       <p><span class="label">Valandos:</span> ${a.hours}</p>
-      <p><span class="label">Kada:</span> ${a.date}</p>
+      <p><span class="label">Data / Kada:</span> ${a.date}</p>
       <p>${a.description}</p>
       <p class="count">Užsiregistravusių: ${count}</p>
       <a href="${a.location}" target="_blank">📍 Žemėlapis</a>
