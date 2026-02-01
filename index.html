@@ -114,7 +114,7 @@ button:hover{transform:scale(1.05);}
     <div>
       <h2>Apie mane</h2>
       <p>
-        Sveiki, aš esu Benediktas.
+        Sveiki, aš esu Benediktas. Tai yra mano mokyklos projektas, tačiau noriu jį praplėsti į socialinį projektą. Šio puslapio tikslas – padėti žmonėms lengviau rasti socialines veiklas ir savanorystės galimybes. Šiuo metu ieškau partnerių ir organizacijų, kurios norėtų prisidėti prie šios idėjos vystymo.
       </p>
     </div>
   </div>
@@ -122,12 +122,10 @@ button:hover{transform:scale(1.05);}
 </div>
 
 <script>
-let activities = [
-  {id:1,name:"Pagalba senelių namuose",hours:8,date:"2026-02-30 10:00-18:00",description:"Bendravimas su senjorais",location:"https://maps.google.com"},
-  {id:2,name:"Pagalba vaikų dienos centre",hours:6,date:"2026-03-01 09:00-15:00",description:"Pagalba vaikams",location:"https://maps.google.com"}
-];
+// GLOBALS
+let activities = []; // visos veiklos laikomos čia
 
-// LOGIN
+// LOGIN ASMUO
 function login(){
   const name = username.value.trim();
   const email = userEmail.value.trim();
@@ -135,10 +133,11 @@ function login(){
   localStorage.setItem("user", JSON.stringify({name,email}));
   loginSection.style.display = "none";
   activitiesSection.style.display = "block";
+  loadAllActivities();
   renderActivities();
 }
 
-// ORGANIZACIJOS LOGIN
+// LOGIN ORGANIZACIJA
 function orgLogin(){
   const name = orgName.value.trim();
   const code = orgCode.value.trim();
@@ -148,6 +147,7 @@ function orgLogin(){
   loginSection.style.display = "none";
   activitiesSection.style.display = "block";
   document.getElementById("addActivityForm").style.display = "block";
+  loadOrgActivities(code);
   renderActivities();
 }
 
@@ -158,23 +158,49 @@ function logout(){
   activitiesSection.style.display = "none";
 }
 
-// PRIDĖTI VEIKLĄ (tik organizacija)
+// ADD ACTIVITY (tik organizacija)
 function addActivity(){
   const org = JSON.parse(localStorage.getItem("org"));
   if(!org) return;
+
   const newAct = {
-    id: activities.length + 1,
+    id: Date.now(), // unikalus id
     name: document.getElementById("newName").value,
     hours: document.getElementById("newHours").value,
     date: document.getElementById("newDate").value,
     description: document.getElementById("newDesc").value,
     location: document.getElementById("newLocation").value
   };
-  activities.push(newAct);
+
+  // Įkeliame tik tos organizacijos veiklas
+  let orgActivities = JSON.parse(localStorage.getItem(org.code)) || [];
+  orgActivities.push(newAct);
+  localStorage.setItem(org.code, JSON.stringify(orgActivities));
+
+  loadAllActivities();
   renderActivities();
 }
 
-// REGISTRACIJA (tik asmuo)
+// Įkelti VISAS veiklas iš visų organizacijų
+function loadAllActivities(){
+  activities = [];
+  for(let i=0;i<localStorage.length;i++){
+    const key = localStorage.key(i);
+    if(key.startsWith("ORG-")){
+      const orgActs = JSON.parse(localStorage.getItem(key));
+      activities = activities.concat(orgActs);
+    }
+  }
+}
+
+// Įkelti TIK tos organizacijos veiklas
+function loadOrgActivities(code){
+  const orgActs = JSON.parse(localStorage.getItem(code)) || [];
+  // išvalome senas veiklas iš global activities
+  loadAllActivities();
+}
+
+// TOGGLE REGISTRACIJA (tik asmuo)
 function toggleRegistration(activityId){
   const user = JSON.parse(localStorage.getItem("user"));
   if(!user) return;
@@ -189,7 +215,7 @@ function toggleRegistration(activityId){
   renderActivities();
 }
 
-// RENDER VEIKLAS su valandomis, data ir registracijos skaičiumi
+// RENDER ACTIVITIES
 function renderActivities(){
   const regs = JSON.parse(localStorage.getItem("registrations")) || {};
   activitiesContainer.innerHTML = "";
@@ -221,12 +247,14 @@ const org = JSON.parse(localStorage.getItem("org"));
 if(user){
   loginSection.style.display="none";
   activitiesSection.style.display="block";
+  loadAllActivities();
   renderActivities();
 }
 if(org){
   loginSection.style.display="none";
   activitiesSection.style.display="block";
   document.getElementById("addActivityForm").style.display="block";
+  loadOrgActivities(org.code);
   renderActivities();
 }
 </script>
