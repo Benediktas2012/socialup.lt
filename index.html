@@ -2,7 +2,7 @@
 <html lang="lt">
 <head>
   <meta charset="UTF-8">
-  <title>Socialinių valandų sistema</title>
+  <title>SocialUp – socialinės veiklos</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -13,25 +13,8 @@
   <!-- LOGIN -->
   <div id="loginSection">
     <h1>Prisijungimas</h1>
-    <input type="text" id="username" placeholder="Vardas / Organizacijos pavadinimas">
-    <select id="role">
-      <option value="user">Savanoris</option>
-      <option value="org">Organizacija</option>
-    </select>
-    <input type="password" id="orgCode" placeholder="Organizacijos kodas">
+    <input type="text" id="username" placeholder="Vardas">
     <button onclick="login()">Prisijungti</button>
-  </div>
-
-  <!-- ORGANIZACIJOS PANELĖ -->
-  <div id="orgPanel" style="display:none;">
-    <h1>Organizacijos panelė</h1>
-    <input id="newName" placeholder="Veiklos pavadinimas">
-    <input id="newHours" type="number" placeholder="Valandos">
-    <input id="newDate" placeholder="Kada">
-    <input id="newDesc" placeholder="Aprašymas">
-    <input id="newLocation" placeholder="Google Maps nuoroda">
-    <button onclick="addActivity()">➕ Pridėti veiklą</button>
-    <button class="logout" onclick="logout()">Atsijungti</button>
   </div>
 
   <!-- VEIKLOS -->
@@ -44,7 +27,7 @@
   <!-- APIE MANE -->
   <div class="about-me">
     <img src="apie-mane.jpg" alt="Aš savanoriaujant">
-    <div class="about-text">
+    <div>
       <h2>Apie mane</h2>
       <p>
         Tai yra mano mokyklos projektas, tačiau noriu jį praplėsti į
@@ -61,83 +44,80 @@
 </div>
 
 <script>
-const ORG_CODE = "ORG-1234";
-
-let activities = JSON.parse(localStorage.getItem("activities")) || [
+let activities = [
   {
-    name:"Pagalba senelių namuose",
-    hours:8,
-    date:"Antradieniais",
-    description:"Bendravimas su senjorais",
-    location:"https://maps.google.com"
+    id: 1,
+    name: "Pagalba senelių namuose",
+    hours: 8,
+    date: "Antradieniais",
+    description: "Bendravimas su senjorais",
+    location: "https://maps.google.com"
   },
   {
-    name:"Pagalba vaikų dienos centre",
-    hours:6,
-    date:"Pirmadieniais",
-    description:"Pagalba vaikams",
-    location:"https://maps.google.com"
+    id: 2,
+    name: "Pagalba vaikų dienos centre",
+    hours: 6,
+    date: "Pirmadieniais",
+    description: "Pagalba vaikams",
+    location: "https://maps.google.com"
   }
 ];
 
-function saveActivities(){
-  localStorage.setItem("activities", JSON.stringify(activities));
-}
-
 function login(){
   const name = username.value.trim();
-  const r = role.value;
   if(!name) return alert("Įvesk vardą");
-  if(r==="org" && orgCode.value!==ORG_CODE) return alert("Blogas kodas");
-
-  localStorage.setItem("currentUser", name);
-  localStorage.setItem("role", r);
+  localStorage.setItem("user", name);
   location.reload();
 }
 
 function logout(){
-  localStorage.removeItem("currentUser");
-  localStorage.removeItem("role");
+  localStorage.clear();
   location.reload();
 }
 
-function addActivity(){
-  activities.push({
-    name:newName.value,
-    hours:newHours.value,
-    date:newDate.value,
-    description:newDesc.value,
-    location:newLocation.value
-  });
-  saveActivities();
-  location.reload();
+function toggleRegistration(activityId){
+  const user = localStorage.getItem("user");
+  let regs = JSON.parse(localStorage.getItem("registrations")) || {};
+
+  if(regs[activityId]){
+    delete regs[activityId];
+  } else {
+    regs[activityId] = user;
+  }
+
+  localStorage.setItem("registrations", JSON.stringify(regs));
+  renderActivities();
 }
 
 function renderActivities(){
-  activitiesContainer.innerHTML="";
-  activities.forEach(a=>{
-    const div=document.createElement("div");
-    div.className="card";
-    div.innerHTML=`
+  const regs = JSON.parse(localStorage.getItem("registrations")) || {};
+  activitiesContainer.innerHTML = "";
+
+  activities.forEach(a => {
+    const registered = regs[a.id];
+    const div = document.createElement("div");
+    div.className = "card";
+
+    div.innerHTML = `
       <h3>${a.name}</h3>
       <p><b>Valandos:</b> ${a.hours}</p>
       <p><b>Kada:</b> ${a.date}</p>
       <p>${a.description}</p>
       <a href="${a.location}" target="_blank">📍 Žemėlapis</a>
+      <button class="${registered ? 'unreg' : 'reg'}"
+        onclick="toggleRegistration(${a.id})">
+        ${registered ? "Atsiregistruoti" : "Užsiregistruoti"}
+      </button>
     `;
+
     activitiesContainer.appendChild(div);
   });
 }
 
-const user = localStorage.getItem("currentUser");
-const r = localStorage.getItem("role");
-
-if(!user){
-  loginSection.style.display="block";
-}else if(r==="org"){
-  orgPanel.style.display="block";
-}else{
-  activitiesSection.style.display="block";
+const user = localStorage.getItem("user");
+if(user){
+  loginSection.style.display = "none";
+  activitiesSection.style.display = "block";
   renderActivities();
 }
 </script>
