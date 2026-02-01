@@ -132,22 +132,19 @@ let activities = [
 function login(){
   const name = username.value.trim();
   const email = userEmail.value.trim();
-  if(!name || !email) return alert("Įvesk vardą ir el. paštą");
-
+  if(!name || !email) return;
   localStorage.setItem("user", JSON.stringify({name,email}));
   loginSection.style.display = "none";
   activitiesSection.style.display = "block";
   renderActivities();
-  alert("Sėkmingai prisijungei! (demo laiškas)");
 }
 
 // --- ORGANIZACIJOS LOGIN ---
 function orgLogin(){
   const name = orgName.value.trim();
   const code = orgCode.value.trim();
-  if(!name || !code) return alert("Įveskite visus duomenis");
-  if(!code.startsWith("ORG-")) return alert("Netinkamas organizacijos kodas");
-
+  if(!name || !code) return;
+  if(!code.startsWith("ORG-")) return;
   localStorage.setItem("org", JSON.stringify({name,code}));
   loginSection.style.display = "none";
   activitiesSection.style.display = "block";
@@ -165,8 +162,7 @@ function logout(){
 // --- PRIDĖTI NAUJĄ VEIKLĄ (tik organizacija) ---
 function addActivity(){
   const org = JSON.parse(localStorage.getItem("org"));
-  if(!org) return alert("Tik organizacijos gali pridėti veiklas");
-
+  if(!org) return;
   const newAct = {
     id: activities.length + 1,
     name: document.getElementById("newName").value,
@@ -175,17 +171,14 @@ function addActivity(){
     description: document.getElementById("newDesc").value,
     location: document.getElementById("newLocation").value
   };
-
   activities.push(newAct);
   renderActivities();
-  alert("Veikla pridėta!");
 }
 
 // --- REGISTRACIJOS FUNKCIJA (tik asmuo) ---
 function toggleRegistration(activityId){
   const user = JSON.parse(localStorage.getItem("user"));
-  if(!user) return alert("Prisijunkite kaip asmuo");
-
+  if(!user) return;
   let regs = JSON.parse(localStorage.getItem("registrations")) || {};
   if(!regs[activityId]) regs[activityId] = [];
   if(regs[activityId].includes(user.name)){
@@ -195,14 +188,12 @@ function toggleRegistration(activityId){
   }
   localStorage.setItem("registrations", JSON.stringify(regs));
   renderActivities();
-  alert("Užsiregistravai! (demo laiškas)");
 }
 
 // --- RENDER VEIKLAS ---
 function renderActivities(){
   const regs = JSON.parse(localStorage.getItem("registrations")) || {};
   activitiesContainer.innerHTML = "";
-
   activities.forEach(a => {
     const user = JSON.parse(localStorage.getItem("user"));
     const registered = user && regs[a.id] && regs[a.id].includes(user.name);
