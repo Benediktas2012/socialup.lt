@@ -43,7 +43,7 @@
 
   <!-- APIE MANE -->
   <div class="about-me">
-    <img src="images/apie-mane.jpg" alt="Aš savanoriaujant">
+    <img src="apie-mane.jpg" alt="Aš savanoriaujant">
     <div class="about-text">
       <h2>Apie mane</h2>
       <p>
@@ -64,8 +64,20 @@
 const ORG_CODE = "ORG-1234";
 
 let activities = JSON.parse(localStorage.getItem("activities")) || [
-  { name:"Pagalba senelių namuose", hours:8, date:"Antradieniais", description:"Bendravimas su senjorais", location:"https://maps.google.com" },
-  { name:"Pagalba vaikų dienos centre", hours:6, date:"Pirmadieniais", description:"Pagalba vaikams", location:"https://maps.google.com" }
+  {
+    name:"Pagalba senelių namuose",
+    hours:8,
+    date:"Antradieniais",
+    description:"Bendravimas su senjorais",
+    location:"https://maps.google.com"
+  },
+  {
+    name:"Pagalba vaikų dienos centre",
+    hours:6,
+    date:"Pirmadieniais",
+    description:"Pagalba vaikams",
+    location:"https://maps.google.com"
+  }
 ];
 
 function saveActivities(){
