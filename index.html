@@ -4,7 +4,66 @@
   <meta charset="UTF-8">
   <title>SocialUp – socialinės veiklos</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+  <style>
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Segoe UI,Arial,sans-serif;
+      background:url("https://images.unsplash.com/photo-1529156069898-49953e39b3ac") center/cover fixed;
+      color:white;
+    }
+    .container{
+      max-width:1100px;
+      margin:40px auto;
+      background:rgba(0,0,0,.85);
+      padding:40px;
+      border-radius:20px;
+    }
+    h1,h2,h3{text-align:center;color:#ffd700;}
+    input,button{
+      width:100%;
+      padding:14px;
+      margin-bottom:12px;
+      border:none;
+      border-radius:10px;
+      font-size:16px;
+    }
+    button{
+      background:#2ecc71;
+      color:white;
+      font-weight:bold;
+      cursor:pointer;
+      transition: all 0.3s ease;
+    }
+    button:hover{transform: scale(1.05); opacity:0.9;}
+    .logout{background:#e74c3c;margin-top:20px;}
+    .activities{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;}
+    .card{
+      background:rgba(255,255,255,.12);
+      padding:20px;
+      border-radius:15px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .card h3{margin:0;color:#ffd700;}
+    .card a{color:#00d4ff;text-decoration:none;}
+    .reg{background:#27ae60;}
+    .unreg{background:#c0392b;}
+    .about-me{
+      display:flex;
+      gap:30px;
+      margin-top:60px;
+      padding:30px;
+      background:rgba(0,0,0,.6);
+      border-radius:20px;
+      align-items:center;
+    }
+    .about-me img{width:200px;border-radius:20px;border:3px solid #ffd700;}
+    @media(max-width:768px){
+      .about-me{flex-direction:column;text-align:center;}
+    }
+  </style>
 </head>
 <body>
 
@@ -13,13 +72,30 @@
   <!-- LOGIN -->
   <div id="loginSection">
     <h1>Prisijungimas</h1>
+
+    <h3>Asmuo</h3>
     <input type="text" id="username" placeholder="Vardas">
+    <input type="email" id="userEmail" placeholder="El. paštas">
     <button onclick="login()">Prisijungti</button>
+
+    <h3>Organizacija</h3>
+    <input type="text" id="orgName" placeholder="Organizacijos pavadinimas">
+    <input type="text" id="orgCode" placeholder="Specialus kodas (pvz. ORG-123)">
+    <button onclick="orgLogin()">Prisijungti kaip organizacija</button>
   </div>
 
   <!-- VEIKLOS -->
   <div id="activitiesSection" style="display:none;">
     <h1>Socialinės veiklos</h1>
+    <div id="addActivityForm" style="display:none;">
+      <h3>Pridėti naują veiklą</h3>
+      <input type="text" id="newName" placeholder="Veiklos pavadinimas">
+      <input type="number" id="newHours" placeholder="Valandų skaičius">
+      <input type="text" id="newDate" placeholder="Kada (pvz. Pirmadieniais)">
+      <input type="text" id="newDesc" placeholder="Aprašymas">
+      <input type="text" id="newLocation" placeholder="Žemėlapio nuoroda">
+      <button onclick="addActivity()">Pridėti veiklą</button>
+    </div>
     <div class="activities" id="activitiesContainer"></div>
     <button class="logout" onclick="logout()">Atsijungti</button>
   </div>
@@ -45,79 +121,117 @@
 
 <script>
 let activities = [
-  {
-    id: 1,
-    name: "Pagalba senelių namuose",
-    hours: 8,
-    date: "Antradieniais",
-    description: "Bendravimas su senjorais",
-    location: "https://maps.google.com"
-  },
-  {
-    id: 2,
-    name: "Pagalba vaikų dienos centre",
-    hours: 6,
-    date: "Pirmadieniais",
-    description: "Pagalba vaikams",
-    location: "https://maps.google.com"
-  }
+  {id:1,name:"Pagalba senelių namuose",hours:8,date:"Antradieniais",description:"Bendravimas su senjorais",location:"https://maps.google.com"},
+  {id:2,name:"Pagalba vaikų dienos centre",hours:6,date:"Pirmadieniais",description:"Pagalba vaikams",location:"https://maps.google.com"}
 ];
 
+// --- ASMUO LOGIN ---
 function login(){
   const name = username.value.trim();
-  if(!name) return alert("Įvesk vardą");
-  localStorage.setItem("user", name);
-  location.reload();
+  const email = userEmail.value.trim();
+  if(!name || !email) return alert("Įvesk vardą ir el. paštą");
+
+  localStorage.setItem("user", JSON.stringify({name,email}));
+  loginSection.style.display = "none";
+  activitiesSection.style.display = "block";
+  renderActivities();
+  alert("Sėkmingai prisijungei! (demo laiškas)");
 }
 
-function logout(){
-  localStorage.clear();
-  location.reload();
-}
+// --- ORGANIZACIJOS LOGIN ---
+function orgLogin(){
+  const name = orgName.value.trim();
+  const code = orgCode.value.trim();
+  if(!name || !code) return alert("Įveskite visus duomenis");
+  if(!code.startsWith("ORG-")) return alert("Netinkamas organizacijos kodas");
 
-function toggleRegistration(activityId){
-  const user = localStorage.getItem("user");
-  let regs = JSON.parse(localStorage.getItem("registrations")) || {};
-
-  if(regs[activityId]){
-    delete regs[activityId];
-  } else {
-    regs[activityId] = user;
-  }
-
-  localStorage.setItem("registrations", JSON.stringify(regs));
+  localStorage.setItem("org", JSON.stringify({name,code}));
+  loginSection.style.display = "none";
+  activitiesSection.style.display = "block";
+  document.getElementById("addActivityForm").style.display = "block";
   renderActivities();
 }
 
+// --- LOGOUT ---
+function logout(){
+  localStorage.clear();
+  loginSection.style.display = "block";
+  activitiesSection.style.display = "none";
+}
+
+// --- PRIDĖTI NAUJĄ VEIKLĄ ---
+function addActivity(){
+  const org = JSON.parse(localStorage.getItem("org"));
+  if(!org) return alert("Tik organizacijos gali pridėti veiklas");
+
+  const newAct = {
+    id: activities.length + 1,
+    name: document.getElementById("newName").value,
+    hours: document.getElementById("newHours").value,
+    date: document.getElementById("newDate").value,
+    description: document.getElementById("newDesc").value,
+    location: document.getElementById("newLocation").value
+  };
+
+  activities.push(newAct);
+  renderActivities();
+  alert("Veikla pridėta!");
+}
+
+// --- REGISTRACIJOS FUNKCIJA ---
+function toggleRegistration(activityId){
+  const user = JSON.parse(localStorage.getItem("user"));
+  if(!user) return alert("Prisijunkite kaip asmuo");
+  
+  let regs = JSON.parse(localStorage.getItem("registrations")) || {};
+  if(!regs[activityId]) regs[activityId] = [];
+  if(regs[activityId].includes(user.name)){
+    regs[activityId] = regs[activityId].filter(u => u !== user.name);
+  } else {
+    regs[activityId].push(user.name);
+  }
+  localStorage.setItem("registrations", JSON.stringify(regs));
+  renderActivities();
+  alert("Užsiregistravai! (demo laiškas)");
+}
+
+// --- RENDER VEIKLAS ---
 function renderActivities(){
   const regs = JSON.parse(localStorage.getItem("registrations")) || {};
   activitiesContainer.innerHTML = "";
 
   activities.forEach(a => {
-    const registered = regs[a.id];
+    const user = JSON.parse(localStorage.getItem("user"));
+    const registered = user && regs[a.id] && regs[a.id].includes(user.name);
     const div = document.createElement("div");
     div.className = "card";
-
     div.innerHTML = `
       <h3>${a.name}</h3>
       <p><b>Valandos:</b> ${a.hours}</p>
       <p><b>Kada:</b> ${a.date}</p>
       <p>${a.description}</p>
       <a href="${a.location}" target="_blank">📍 Žemėlapis</a>
-      <button class="${registered ? 'unreg' : 'reg'}"
+      ${user ? `<button class="${registered ? 'unreg' : 'reg'}"
         onclick="toggleRegistration(${a.id})">
         ${registered ? "Atsiregistruoti" : "Užsiregistruoti"}
-      </button>
+      </button>` : ""}
     `;
-
     activitiesContainer.appendChild(div);
   });
 }
 
-const user = localStorage.getItem("user");
+// --- PATIKRINAME AR VARTOTOJAS JAU PRISIJUNGĘS ---
+const user = JSON.parse(localStorage.getItem("user"));
+const org = JSON.parse(localStorage.getItem("org"));
 if(user){
   loginSection.style.display = "none";
   activitiesSection.style.display = "block";
+  renderActivities();
+}
+if(org){
+  loginSection.style.display = "none";
+  activitiesSection.style.display = "block";
+  document.getElementById("addActivityForm").style.display = "block";
   renderActivities();
 }
 </script>
