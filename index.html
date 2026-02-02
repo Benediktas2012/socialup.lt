@@ -13,8 +13,9 @@
   <!-- LOGIN -->
   <div id="loginSection">
     <h1>Prisijungimas</h1>
+
+    <input id="loginInput" placeholder="Vardas (naudotojui) arba ORG-123">
     <input id="orgName" placeholder="Organizacijos pavadinimas (tik org)">
-    <input id="loginInput" placeholder="Vardas arba ORG-123">
     <button onclick="login()">Prisijungti</button>
   </div>
 
@@ -33,7 +34,7 @@
     <button class="logout" onclick="logout()">Atsijungti</button>
   </div>
 
-  <!-- ASMUO -->
+  <!-- NAUDOTOJAS -->
   <div id="userSection" style="display:none;">
     <h1>Galimos veiklos</h1>
     <div id="userActivities" class="activities"></div>
@@ -42,17 +43,20 @@
 
   <!-- APIE MANE -->
   <div class="about-me">
-    <h2>Apie mane</h2>
-    <p><b>Sveiki, aš esu Benediktas.</b></p>
-    <p>
-      Tai yra mano mokyklos projektas, tačiau noriu jį praplėsti į
-      socialinį projektą. Šio puslapio tikslas – padėti žmonėms
-      lengviau rasti socialines veiklas ir savanorystės galimybes.
-    </p>
-    <p>
-      Šiuo metu ieškau partnerių ir organizacijų, kurios norėtų
-      prisidėti prie šios idėjos vystymo.
-    </p>
+    <img src="apie-mane.jpg" alt="Aš savanoriaujant">
+    <div>
+      <h2>Apie mane</h2>
+      <p><b>Sveiki, aš esu Benediktas.</b></p>
+      <p>
+        Tai yra mano mokyklos projektas, tačiau noriu jį praplėsti į
+        socialinį projektą. Šio puslapio tikslas – padėti žmonėms
+        lengviau rasti socialines veiklas ir savanorystės galimybes.
+      </p>
+      <p>
+        Šiuo metu ieškau partnerių ir organizacijų, kurios norėtų
+        prisidėti prie šios idėjos vystymo.
+      </p>
+    </div>
   </div>
 
 </div>
@@ -61,32 +65,38 @@
 let editId = null;
 
 function login(){
-  const code = loginInput.value.trim();
-  const name = orgName.value.trim();
+  const input = loginInput.value.trim();
+  const org = orgName.value.trim();
 
-  if(!code) return alert("Įvesk duomenis");
+  if(!input) return alert("Įvesk vardą arba ORG kodą");
 
-  if(code.startsWith("ORG-")){
-    const key = "org_" + code;
+  // ORGANIZACIJA
+  if(input.startsWith("ORG-")){
+    if(!org) return alert("Įvesk organizacijos pavadinimą");
+
+    const key = "org_" + input;
     const saved = JSON.parse(localStorage.getItem(key));
 
-    if(saved && saved.name !== name){
+    if(saved && saved.name !== org){
       return alert("Neteisingas organizacijos pavadinimas");
     }
 
     if(!saved){
       localStorage.setItem(key, JSON.stringify({
-        name,
-        activities:[]
+        name: org,
+        activities: []
       }));
     }
 
     localStorage.setItem("role","org");
-    localStorage.setItem("orgCode",code);
-  } else {
-    localStorage.setItem("role","user");
-    localStorage.setItem("user",code);
+    localStorage.setItem("orgCode",input);
   }
+  // NAUDOTOJAS
+  else{
+    localStorage.setItem("role","user");
+    localStorage.setItem("user",input);
+  }
+
   location.reload();
 }
 
@@ -158,7 +168,7 @@ function renderOrg(){
         <h3>${a.title}</h3>
         <p>📅 ${a.date}</p>
         <p>⏱️ ${a.hours} val.</p>
-        <p>👥 Užsiregistravo: ${a.regs.length}</p>
+        <p>👥 ${a.regs.length} žmonių</p>
         <button onclick="editActivity(${a.id})">✏️ Redaguoti</button>
         <button onclick="deleteActivity(${a.id})">🗑️ Ištrinti</button>
       </div>
@@ -185,13 +195,15 @@ function renderUser(){
   });
 }
 
-if(localStorage.getItem("role")==="org"){
+const role = localStorage.getItem("role");
+
+if(role === "org"){
   loginSection.style.display="none";
   orgSection.style.display="block";
   renderOrg();
 }
 
-if(localStorage.getItem("role")==="user"){
+if(role === "user"){
   loginSection.style.display="none";
   userSection.style.display="block";
   renderUser();
