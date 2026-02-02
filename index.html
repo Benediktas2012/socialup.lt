@@ -14,7 +14,7 @@
   <div id="loginSection">
     <h1>Prisijungimas</h1>
     <input id="orgName" placeholder="Organizacijos pavadinimas (tik org)">
-    <input id="loginInput" placeholder="Vardas ARBA ORG-123">
+    <input id="loginInput" placeholder="Vardas arba ORG-123">
     <button onclick="login()">Prisijungti</button>
   </div>
 
@@ -26,7 +26,7 @@
       <input id="title" placeholder="Veiklos pavadinimas">
       <input id="date" type="date">
       <input id="hours" type="number" placeholder="Valandos">
-      <button onclick="addOrUpdate()">Išsaugoti veiklą</button>
+      <button onclick="saveActivity()">Išsaugoti veiklą</button>
     </div>
 
     <div id="orgActivities" class="activities"></div>
@@ -67,7 +67,7 @@ function login(){
   if(!code) return alert("Įvesk duomenis");
 
   if(code.startsWith("ORG-")){
-    const key = "org_"+code;
+    const key = "org_" + code;
     const saved = JSON.parse(localStorage.getItem(key));
 
     if(saved && saved.name !== name){
@@ -75,7 +75,10 @@ function login(){
     }
 
     if(!saved){
-      localStorage.setItem(key, JSON.stringify({name, activities:[]}));
+      localStorage.setItem(key, JSON.stringify({
+        name,
+        activities:[]
+      }));
     }
 
     localStorage.setItem("role","org");
@@ -88,21 +91,24 @@ function login(){
 }
 
 function logout(){
-  localStorage.removeItem("role");
-  localStorage.removeItem("orgCode");
-  localStorage.removeItem("user");
+  localStorage.clear();
   location.reload();
 }
 
 function getOrg(){
-  return JSON.parse(localStorage.getItem("org_"+localStorage.getItem("orgCode")));
+  return JSON.parse(
+    localStorage.getItem("org_" + localStorage.getItem("orgCode"))
+  );
 }
 
-function saveOrg(data){
-  localStorage.setItem("org_"+localStorage.getItem("orgCode"), JSON.stringify(data));
+function saveOrg(org){
+  localStorage.setItem(
+    "org_" + localStorage.getItem("orgCode"),
+    JSON.stringify(org)
+  );
 }
 
-function addOrUpdate(){
+function saveActivity(){
   const org = getOrg();
 
   if(editId){
@@ -122,16 +128,16 @@ function addOrUpdate(){
   }
 
   saveOrg(org);
-  title.value=date.value=hours.value="";
+  title.value = date.value = hours.value = "";
   renderOrg();
 }
 
 function editActivity(id){
   const a = getOrg().activities.find(a=>a.id===id);
-  title.value=a.title;
-  date.value=a.date;
-  hours.value=a.hours;
-  editId=id;
+  title.value = a.title;
+  date.value = a.date;
+  hours.value = a.hours;
+  editId = id;
 }
 
 function deleteActivity(id){
@@ -144,32 +150,36 @@ function deleteActivity(id){
 function renderOrg(){
   const org = getOrg();
   orgTitle.innerText = org.name;
-  orgActivities.innerHTML="";
+  orgActivities.innerHTML = "";
+
   org.activities.forEach(a=>{
-    orgActivities.innerHTML+=`
+    orgActivities.innerHTML += `
       <div class="card">
         <h3>${a.title}</h3>
         <p>📅 ${a.date}</p>
         <p>⏱️ ${a.hours} val.</p>
-        <p>👥 ${a.regs.length} žmonių</p>
+        <p>👥 Užsiregistravo: ${a.regs.length}</p>
         <button onclick="editActivity(${a.id})">✏️ Redaguoti</button>
         <button onclick="deleteActivity(${a.id})">🗑️ Ištrinti</button>
-      </div>`;
+      </div>
+    `;
   });
 }
 
 function renderUser(){
-  userActivities.innerHTML="";
+  userActivities.innerHTML = "";
   Object.keys(localStorage).forEach(k=>{
     if(k.startsWith("org_")){
-      JSON.parse(localStorage.getItem(k)).activities.forEach(a=>{
-        userActivities.innerHTML+=`
+      const org = JSON.parse(localStorage.getItem(k));
+      org.activities.forEach(a=>{
+        userActivities.innerHTML += `
           <div class="card">
             <h3>${a.title}</h3>
             <p>📅 ${a.date}</p>
             <p>⏱️ ${a.hours} val.</p>
-            <p>👥 ${a.regs.length}</p>
-          </div>`;
+            <p>👥 ${a.regs.length} žmonių</p>
+          </div>
+        `;
       });
     }
   });
