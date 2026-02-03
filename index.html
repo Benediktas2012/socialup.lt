@@ -23,6 +23,7 @@
 
     <!-- ORGANIZACIJAI -->
     <div id="orgPanel" style="display:none;">
+      <h2>Pridėti veiklą</h2>
       <input id="title" placeholder="Veiklos pavadinimas">
       <input id="date" type="date">
       <input id="timeFrom" type="time">
@@ -35,6 +36,16 @@
 
     <div class="activities" id="activitiesContainer"></div>
     <button class="logout" onclick="logout()">Atsijungti</button>
+  </div>
+
+  <!-- APIE MANE -->
+  <div class="about-me">
+    <img src="apie-mane.jpg" alt="Aš savanoriaujant">
+    <div>
+      <h2>Apie mane</h2>
+      <p><b>Sveiki, aš esu Benediktas.</b></p>
+      <p>Tai mano mokyklos projektas, kurį noriu paversti realiu socialiniu projektu.</p>
+    </div>
   </div>
 
 </div>
@@ -80,7 +91,7 @@ function saveOrgs(orgs){
 }
 
 // -------- VEIKLOS --------
-function addActivity(){
+function addActivity(editId = null){
   const orgCode = localStorage.getItem("orgCode");
   if(!orgCode) return;
 
@@ -99,20 +110,34 @@ function addActivity(){
     return alert("Užpildyk visus laukus");
   }
 
-  org.activities.push({
-    id: Date.now(),
-    title: title,
-    date: date,
-    timeFrom: timeFrom,
-    hours: Number(hours),
-    age: Number(age),
-    description: description,
-    location: locationVal,
-    registered: []
-  });
+  if(editId){ // redagavimas
+    const activity = org.activities.find(a => a.id === editId);
+    if(activity){
+      activity.title = title;
+      activity.date = date;
+      activity.timeFrom = timeFrom;
+      activity.hours = Number(hours);
+      activity.age = Number(age);
+      activity.description = description;
+      activity.location = locationVal;
+    }
+  } else { // nauja veikla
+    org.activities.push({
+      id: Date.now(),
+      title,
+      date,
+      timeFrom,
+      hours: Number(hours),
+      age: Number(age),
+      description,
+      location: locationVal,
+      registered: []
+    });
+  }
 
   saveOrgs(orgs);
 
+  // Išvalyti formą
   document.getElementById("title").value = "";
   document.getElementById("date").value = "";
   document.getElementById("timeFrom").value = "";
@@ -121,6 +146,35 @@ function addActivity(){
   document.getElementById("description").value = "";
   document.getElementById("locationInput").value = "";
 
+  renderActivities();
+}
+
+// -------- REDAGAVIMAS --------
+function editActivity(orgCode, activityId){
+  const orgs = getOrgs();
+  const activity = orgs[orgCode].activities.find(a => a.id === activityId);
+  if(!activity) return;
+
+  document.getElementById("title").value = activity.title;
+  document.getElementById("date").value = activity.date;
+  document.getElementById("timeFrom").value = activity.timeFrom;
+  document.getElementById("hours").value = activity.hours;
+  document.getElementById("age").value = activity.age;
+  document.getElementById("description").value = activity.description;
+  document.getElementById("locationInput").value = activity.location;
+
+  // mygtukas dabar redaguoti
+  const btn = document.querySelector("#orgPanel button");
+  btn.textContent = "Išsaugoti pakeitimus";
+  btn.onclick = () => addActivity(activityId);
+}
+
+// -------- TRYNIMAS --------
+function deleteActivity(orgCode, activityId){
+  if(!confirm("Ar tikrai norite ištrinti šią veiklą?")) return;
+  const orgs = getOrgs();
+  orgs[orgCode].activities = orgs[orgCode].activities.filter(a => a.id !== activityId);
+  saveOrgs(orgs);
   renderActivities();
 }
 
@@ -165,10 +219,19 @@ function renderActivities(){
       let endHourStr = endHour < 10 ? "0"+endHour : endHour;
       let timeStr = `⏰ ${a.timeFrom} – ${endHourStr}:${m < 10 ? "0"+m : m}`;
 
-      // Registracijos statusas (vartotojams)
+      // Registracijos statusas vartotojams
       let regStatus = "";
       if(role==="user") {
         regStatus = isRegistered ? "🟢 Užsiregistravęs" : "🔴 Neprisiregistravęs";
+      }
+
+      // Organizacijos redagavimo/trynimo mygtukai
+      let orgControls = "";
+      if(role==="org" && orgCode === currentOrgCode){
+        orgControls = `
+          <button class="edit-btn" onclick="editActivity('${orgCode}',${a.id})">✏️ Redaguoti</button>
+          <button class="delete-btn" onclick="deleteActivity('${orgCode}',${a.id})">🗑️ Ištrinti</button>
+        `;
       }
 
       activitiesContainer.innerHTML += `
@@ -182,10 +245,18 @@ function renderActivities(){
           <p>👥 Užsiregistravę: ${a.registered.length}</p>
           ${a.location ? `<a href="${a.location}" target="_blank">📍 Vieta</a>` : ""}
           ${role === "user" ? `<p>${regStatus}</p><button class="register-btn" onclick="toggleRegister('${orgCode}', ${a.id})">${isRegistered ? "❌ Atsiregistruoti" : "✅ Užsiregistruoti"}</button>` : ""}
+          ${orgControls}
         </div>
       `;
     });
   });
+
+  // atstatyti pridėjimo mygtuką po redagavimo
+  if(role==="org"){
+    const btn = document.querySelector("#orgPanel button");
+    btn.textContent = "Išsaugoti veiklą";
+    btn.onclick = () => addActivity();
+  }
 }
 
 // -------- START --------
