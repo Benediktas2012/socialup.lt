@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="lt">
 <head>
-  <meta charset="UTF-8">
-  <title>SocialUp – socialinės veiklos</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SocialUp – socialinės veiklos</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -37,20 +37,10 @@
     <button class="logout" onclick="logout()">Atsijungti</button>
   </div>
 
-  <!-- APIE MANE -->
-  <div class="about-me">
-    <img src="apie-mane.jpg" alt="Aš savanoriaujant">
-    <div>
-      <h2>Apie mane</h2>
-      <p><b>Sveiki, aš esu Benediktas.</b></p>
-      <p>Tai mano mokyklos projektas, kurį noriu paversti realiu socialiniu projektu.</p>
-    </div>
-  </div>
-
 </div>
 
 <script>
-/* -------- LOGIN -------- */
+// -------- LOGIN --------
 function login(){
   const val = document.getElementById("loginInput").value.trim();
   if(!val) return alert("Įvesk vardą arba ORG kodą");
@@ -58,7 +48,6 @@ function login(){
   let orgs = JSON.parse(localStorage.getItem("orgs")) || {};
 
   if(val.startsWith("ORG-")){
-    // Sukuriam organizaciją, jei jos dar nėra
     if(!orgs[val]){
       const name = prompt("Organizacijos pavadinimas:");
       if(!name) return;
@@ -82,7 +71,7 @@ function logout(){
   location.reload();
 }
 
-/* -------- DUOMENYS -------- */
+// -------- DUOMENYS --------
 function getOrgs(){
   return JSON.parse(localStorage.getItem("orgs")) || {};
 }
@@ -90,7 +79,7 @@ function saveOrgs(orgs){
   localStorage.setItem("orgs", JSON.stringify(orgs));
 }
 
-/* -------- VEIKLOS -------- */
+// -------- VEIKLOS --------
 function addActivity(){
   const orgCode = localStorage.getItem("orgCode");
   if(!orgCode) return;
@@ -124,7 +113,6 @@ function addActivity(){
 
   saveOrgs(orgs);
 
-  // Išvalyti formą
   document.getElementById("title").value = "";
   document.getElementById("date").value = "";
   document.getElementById("timeFrom").value = "";
@@ -136,18 +124,16 @@ function addActivity(){
   renderActivities();
 }
 
-/* -------- REGISTRACIJA -------- */
+// -------- REGISTRACIJA --------
 function toggleRegister(orgCode, activityId){
   const user = localStorage.getItem("user");
   if(!user) return alert("Prisijunkite, kad galėtumėte registruotis");
 
   const orgs = getOrgs();
-  const activity = orgs[orgCode].activities.find(a=>a.id===activityId);
-
-  if(!activity) return;
+  const activity = orgs[orgCode].activities.find(a => a.id === activityId);
 
   if(activity.registered.includes(user)){
-    activity.registered = activity.registered.filter(u=>u!==user);
+    activity.registered = activity.registered.filter(u => u !== user);
   } else {
     activity.registered.push(user);
   }
@@ -156,22 +142,22 @@ function toggleRegister(orgCode, activityId){
   renderActivities();
 }
 
-/* -------- RENDER -------- */
+// -------- RENDER --------
 function renderActivities(){
   const role = localStorage.getItem("role");
   const activitiesContainer = document.getElementById("activitiesContainer");
   activitiesContainer.innerHTML = "";
 
   const orgPanel = document.getElementById("orgPanel");
-  orgPanel.style.display = role==="org" ? "block" : "none";
+  orgPanel.style.display = role === "org" ? "block" : "none";
 
   const orgs = getOrgs();
   const user = localStorage.getItem("user");
   const currentOrgCode = localStorage.getItem("orgCode");
 
-  Object.entries(orgs).forEach(([orgCode,org])=>{
-    org.activities.forEach(a=>{
-      const isOrgViewingOwn = role==="org" && orgCode===currentOrgCode;
+  Object.entries(orgs).forEach(([orgCode, org]) => {
+    org.activities.forEach(a => {
+      const isOrgViewingOwn = role === "org" && orgCode === currentOrgCode;
       const isRegistered = user && a.registered.includes(user);
 
       activitiesContainer.innerHTML += `
@@ -185,19 +171,19 @@ function renderActivities(){
           <p>📝 ${a.description}</p>
           <p>👥 Užsiregistravę: ${a.registered.length}</p>
           ${a.location ? `<a href="${a.location}" target="_blank">📍 Vieta</a>` : ""}
-          ${role==="user" ? `<button onclick="toggleRegister('${orgCode}',${a.id})">${isRegistered ? "❌ Atsiregistruoti" : "✅ Užsiregistruoti"}</button>` : ""}
+          ${role === "user" ? `<button onclick="toggleRegister('${orgCode}', ${a.id})">${isRegistered ? "❌ Atsiregistruoti" : "✅ Užsiregistruoti"}</button>` : ""}
         </div>
       `;
     });
   });
 }
 
-/* -------- START -------- */
-window.addEventListener("DOMContentLoaded", ()=>{
+// -------- START --------
+window.addEventListener("DOMContentLoaded", () => {
   const role = localStorage.getItem("role");
   if(role){
-    document.getElementById("loginSection").style.display="none";
-    document.getElementById("activitiesSection").style.display="block";
+    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("activitiesSection").style.display = "block";
     renderActivities();
   }
 });
