@@ -8,6 +8,7 @@
 </head>
 
 <body>
+
 <div class="container">
 
 <!-- LOGIN -->
@@ -21,11 +22,10 @@
 <div id="activitiesSection" style="display:none;">
   <h1>Socialinės veiklos</h1>
 
-  <!-- ORGANIZACIJA -->
+  <!-- ORGANIZACIJAI -->
   <div id="orgPanel" style="display:none;">
     <h2>Pridėti veiklą</h2>
     <input id="title" placeholder="Veiklos pavadinimas">
-    <input id="date" type="date">
     <input id="dateFrom" type="date">
     <input id="dateTo" type="date">
     <input id="timeFrom" type="time">
@@ -40,7 +40,7 @@
   <button class="logout" onclick="logout()">Atsijungti</button>
 </div>
 
-<!-- APIE MANE (GRĄŽINTA) -->
+<!-- APIE MANE (PALIKTA) -->
 <div class="about-me">
   <img src="apie-mane.jpg" alt="Aš savanoriaujant">
   <div>
@@ -48,8 +48,8 @@
     <p><b>Sveiki, aš esu Benediktas.</b></p>
     <p>
       Tai mano mokyklos projektas, kurį noriu paversti realiu socialiniu projektu.
-      Projekto tikslas – skatinti jaunimą įsitraukti į socialines veiklas ir
-      palengvinti bendradarbiavimą tarp organizacijų ir savanorių.
+      Tikslas – skatinti jaunimą įsitraukti į socialines veiklas ir palengvinti
+      bendradarbiavimą tarp organizacijų ir savanorių.
     </p>
   </div>
 </div>
@@ -57,7 +57,6 @@
 </div>
 
 <script>
-/* ===== BENDRA ===== */
 function getOrgs(){
   return JSON.parse(localStorage.getItem("orgs")) || {};
 }
@@ -65,7 +64,6 @@ function saveOrgs(orgs){
   localStorage.setItem("orgs", JSON.stringify(orgs));
 }
 
-/* ===== LOGIN ===== */
 function login(){
   const val = loginInput.value.trim();
   if(!val) return alert("Įvesk vardą arba ORG kodą");
@@ -95,7 +93,6 @@ function logout(){
   location.reload();
 }
 
-/* ===== VEIKLOS ===== */
 let editId = null;
 
 function saveActivity(){
@@ -105,7 +102,6 @@ function saveActivity(){
 
   const activity = {
     title: title.value.trim(),
-    date: date.value,
     dateFrom: dateFrom.value,
     dateTo: dateTo.value,
     timeFrom: timeFrom.value,
@@ -127,7 +123,7 @@ function saveActivity(){
     org.activities.push({
       id: Date.now(),
       ...activity,
-      registered: []   // {name, day, time}
+      registered: []
     });
   }
 
@@ -136,32 +132,29 @@ function saveActivity(){
   renderActivities();
 }
 
-/* ===== REGISTRACIJA SU DATA + LAIKU ===== */
-function toggleRegister(orgCode, id){
+function toggleRegister(orgCode,id){
   const user = localStorage.getItem("user");
   if(!user) return;
 
   const orgs = getOrgs();
-  const activity = orgs[orgCode].activities.find(a => a.id === id);
+  const a = orgs[orgCode].activities.find(x => x.id === id);
 
-  const existing = activity.registered.find(r => r.name === user);
+  const existing = a.registered.find(r => r.name === user);
 
   if(existing){
-    activity.registered = activity.registered.filter(r => r.name !== user);
+    a.registered = a.registered.filter(r => r.name !== user);
   } else {
     const day = prompt("Kurią dieną ateisi? (YYYY-MM-DD)");
     if(!day) return;
     const time = prompt("Kurią valandą ateisi? (HH:MM)");
     if(!time) return;
-
-    activity.registered.push({ name: user, day, time });
+    a.registered.push({ name:user, day, time });
   }
 
   saveOrgs(orgs);
   renderActivities();
 }
 
-/* ===== RENDER ===== */
 function renderActivities(){
   activitiesContainer.innerHTML = "";
   const role = localStorage.getItem("role");
@@ -179,7 +172,6 @@ function renderActivities(){
       <div class="card">
         <h3>${a.title}</h3>
         <p><b>🏢 ${org.name}</b></p>
-        <p>📅 ${a.date}</p>
         <p>📆 ${a.dateFrom} – ${a.dateTo}</p>
         <p>⏰ ${a.timeFrom} – ${a.timeTo}</p>
         <p>🎂 Nuo ${a.age} m.</p>
@@ -187,14 +179,15 @@ function renderActivities(){
         <p>👥 Užsiregistravę: ${a.registered.length}</p>
 
         ${role==="org" && code===curOrg && a.registered.length
-          ? `<p>📋 Dalyviai:<br>
-             ${a.registered.map(r => `👤 ${r.name} – ${r.day} ${r.time}`).join("<br>")}
-             </p>` : ""}
+          ? `<p class="participants">
+              ${a.registered.map(r => `👤 ${r.name} – ${r.day} ${r.time}`).join("<br>")}
+            </p>` : ""}
 
         ${a.location ? `<a href="${a.location}" target="_blank">📍 Vieta</a>` : ""}
 
         ${role==="user"
-          ? `<button class="register-btn" onclick="toggleRegister('${code}',${a.id})">
+          ? `<button class="register-btn"
+              onclick="toggleRegister('${code}',${a.id})">
               ${isReg ? "❌ Atsiregistruoti" : "✅ Užsiregistruoti"}
             </button>` : ""}
       </div>`;
@@ -202,11 +195,10 @@ function renderActivities(){
   });
 }
 
-/* ===== START ===== */
 document.addEventListener("DOMContentLoaded",()=>{
   if(localStorage.getItem("role")){
-    loginSection.style.display = "none";
-    activitiesSection.style.display = "block";
+    loginSection.style.display="none";
+    activitiesSection.style.display="block";
     renderActivities();
   }
 });
