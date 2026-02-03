@@ -5,6 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SocialUp – socialinės veiklos</title>
 <link rel="stylesheet" href="style.css">
+
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXXXX');
+</script>
+
 </head>
 <body>
 
@@ -44,8 +54,7 @@
     <div>
       <h2>Apie mane</h2>
       <p><b>Sveiki, aš esu Benediktas.</b></p>
-      <p>Tai mano mokyklos projektas, kurį noriu paversti realiu socialiniu projektu.  
-      Projekto tikslas – skatinti socialinę veiklą tarp jaunimo ir organizacijų bendradarbiavimą, suteikti galimybę dalyvauti įvairiose veiklose, registruotis ir sekti savo dalyvavimą.</p>
+      <p>Tai mano mokyklos projektas, kurį noriu paversti realiu socialiniu projektu. Projekto tikslas – skatinti socialinę veiklą tarp jaunimo ir organizacijų bendradarbiavimą, suteikti galimybę dalyvauti įvairiose veiklose, registruotis ir sekti savo dalyvavimą.</p>
     </div>
   </div>
 
@@ -107,7 +116,7 @@ function addActivity(editId = null){
     return alert("Užpildyk visus laukus");
   }
 
-  if(editId){ // redagavimas
+  if(editId){ 
     const activity = org.activities.find(a => a.id === editId);
     if(activity){
       activity.title = title;
@@ -118,7 +127,7 @@ function addActivity(editId = null){
       activity.description = description;
       activity.location = locationVal;
     }
-  } else { // nauja veikla
+  } else { 
     org.activities.push({
       id: Date.now(),
       title,
@@ -134,7 +143,6 @@ function addActivity(editId = null){
 
   saveOrgs(orgs);
 
-  // išvalyti formą
   document.getElementById("title").value = "";
   document.getElementById("date").value = "";
   document.getElementById("timeFrom").value = "";
