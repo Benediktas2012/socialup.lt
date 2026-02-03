@@ -21,6 +21,14 @@
   <div id="activitiesSection" style="display:none;">
     <h1>Socialinės veiklos</h1>
 
+    <!-- RŪŠIAVIMAS (VARTOTOJUI) -->
+    <select id="sortSelect">
+      <option value="dateAsc">📅 Data (artimiausios)</option>
+      <option value="dateDesc">📅 Data (tolimiausios)</option>
+      <option value="hoursAsc">⏱️ Valandos (mažiausiai)</option>
+      <option value="hoursDesc">⏱️ Valandos (daugiausiai)</option>
+    </select>
+
     <!-- ORGANIZACIJAI -->
     <div id="orgPanel" style="display:none;">
       <input id="title" placeholder="Veiklos pavadinimas">
@@ -42,11 +50,11 @@
       <h2>Apie mane</h2>
       <p><b>Sveiki, aš esu Benediktas.</b></p>
       <p>
-        Tai yra mano mokyklos projektas, kurį noriu išplėsti
+        Tai mano mokyklos projektas, kurį noriu išplėsti
         į realų socialinį projektą.
       </p>
       <p>
-        Tikslas – padėti žmonėms lengviau rasti
+        Tikslas – padėti žmonėms lengvai rasti
         savanorystės ir socialines veiklas.
       </p>
       <p>
@@ -83,9 +91,7 @@ function login(){
 }
 
 function logout(){
-  localStorage.removeItem("role");
-  localStorage.removeItem("orgCode");
-  localStorage.removeItem("user");
+  localStorage.clear();
   location.reload();
 }
 
@@ -110,24 +116,14 @@ function addActivity(){
     return alert("Užpildyk visus laukus");
   }
 
-  if(editId){
-    const a = org.activities.find(a=>a.id===editId);
-    a.title = title.value;
-    a.date = date.value;
-    a.hoursFrom = hoursFrom.value;
-    a.description = description.value;
-    a.location = location.value;
-    editId = null;
-  } else {
-    org.activities.push({
-      id: Date.now(),
-      title: title.value,
-      date: date.value,
-      hoursFrom: hoursFrom.value,
-      description: description.value,
-      location: location.value
-    });
-  }
+  org.activities.push({
+    id: Date.now(),
+    title: title.value,
+    date: date.value,
+    hoursFrom: Number(hoursFrom.value),
+    description: description.value,
+    location: location.value
+  });
 
   saveOrgs(orgs);
   clearForm();
@@ -139,16 +135,9 @@ function clearForm(){
   description.value = location.value = "";
 }
 
-function deleteActivity(id){
-  const orgs = getOrgs();
-  const org = orgs[localStorage.getItem("orgCode")];
-  org.activities = org.activities.filter(a=>a.id!==id);
-  saveOrgs(orgs);
-  renderOrg();
-}
-
 /* RENDER */
 function renderOrg(){
+  sortSelect.style.display="none";
   orgPanel.style.display="block";
   activitiesContainer.innerHTML="";
   getOrg().activities.forEach(a=>{
@@ -157,12 +146,28 @@ function renderOrg(){
 }
 
 function renderUser(){
+  sortSelect.style.display="block";
+  orgPanel.style.display="none";
+
   const orgs = getOrgs();
-  activitiesContainer.innerHTML="";
+  let allActivities = [];
+
   Object.values(orgs).forEach(org=>{
     org.activities.forEach(a=>{
-      activitiesContainer.innerHTML += cardHTML(a,false,org.name);
+      allActivities.push({...a, orgName: org.name});
     });
+  });
+
+  const sort = sortSelect.value;
+
+  if(sort==="dateAsc") allActivities.sort((a,b)=>new Date(a.date)-new Date(b.date));
+  if(sort==="dateDesc") allActivities.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(sort==="hoursAsc") allActivities.sort((a,b)=>a.hoursFrom-b.hoursFrom);
+  if(sort==="hoursDesc") allActivities.sort((a,b)=>b.hoursFrom-a.hoursFrom);
+
+  activitiesContainer.innerHTML="";
+  allActivities.forEach(a=>{
+    activitiesContainer.innerHTML += cardHTML(a,false,a.orgName);
   });
 }
 
@@ -175,7 +180,6 @@ function cardHTML(a,isOrg,orgName=""){
     <p>⏱️ Nuo ${a.hoursFrom} val.</p>
     <p>📝 ${a.description}</p>
     ${a.location ? `<a href="${a.location}" target="_blank">📍 Vieta</a>` : ""}
-    ${isOrg ? `<button onclick="deleteActivity(${a.id})">🗑️ Ištrinti</button>` : ""}
   </div>`;
 }
 
@@ -186,6 +190,7 @@ if(role){
   activitiesSection.style.display="block";
   role==="org" ? renderOrg() : renderUser();
 }
+sortSelect.onchange = renderUser;
 </script>
 
 </body>
