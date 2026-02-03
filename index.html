@@ -14,56 +14,57 @@
   gtag('js', new Date());
   gtag('config', 'G-XXXXXXXXXX');
 </script>
-
 </head>
-<body>
 
+<body>
 <div class="container">
 
-  <!-- LOGIN -->
-  <div id="loginSection">
-    <h1>Prisijungimas</h1>
-    <input id="loginInput" placeholder="Vardas arba ORG-123">
-    <button onclick="login()">Prisijungti</button>
+<!-- LOGIN -->
+<div id="loginSection">
+  <h1>Prisijungimas</h1>
+  <input id="loginInput" placeholder="Vardas arba ORG-123">
+  <button onclick="login()">Prisijungti</button>
+</div>
+
+<!-- VEIKLOS -->
+<div id="activitiesSection" style="display:none;">
+  <h1>Socialinės veiklos</h1>
+
+  <!-- ORGANIZACIJAI -->
+  <div id="orgPanel" style="display:none;">
+    <h2>Pridėti veiklą</h2>
+    <input id="title" placeholder="Veiklos pavadinimas">
+    <input id="date" type="date">
+    <input id="dateFrom" type="date" placeholder="Galioja nuo">
+    <input id="dateTo" type="date" placeholder="Galioja iki">
+    <input id="timeFrom" type="time">
+    <input id="timeTo" type="time">
+    <input id="age" type="number" min="1" placeholder="Nuo kelių metų">
+    <textarea id="description" placeholder="Veiklos aprašymas"></textarea>
+    <input id="locationInput" placeholder="Vietos nuoroda (Google Maps)">
+    <button onclick="addActivity()">Išsaugoti veiklą</button>
   </div>
 
-  <!-- VEIKLOS -->
-  <div id="activitiesSection" style="display:none;">
-    <h1>Socialinės veiklos</h1>
+  <div class="activities" id="activitiesContainer"></div>
+  <button class="logout" onclick="logout()">Atsijungti</button>
+</div>
 
-    <!-- ORGANIZACIJAI -->
-    <div id="orgPanel" style="display:none;">
-      <h2>Pridėti veiklą</h2>
-      <input id="title" placeholder="Veiklos pavadinimas">
-      <input id="date" type="date">
-      <input id="timeFrom" type="time" placeholder="Nuo">
-      <input id="timeTo" type="time" placeholder="Iki">
-      <input id="age" type="number" min="1" placeholder="Nuo kelių metų">
-      <textarea id="description" placeholder="Veiklos aprašymas"></textarea>
-      <input id="locationInput" placeholder="Vietos nuoroda (Google Maps)">
-      <button onclick="addActivity()">Išsaugoti veiklą</button>
-    </div>
-
-    <div class="activities" id="activitiesContainer"></div>
-    <button class="logout" onclick="logout()">Atsijungti</button>
+<!-- APIE MANE -->
+<div class="about-me">
+  <img src="apie-mane.jpg" alt="Aš savanoriaujant">
+  <div>
+    <h2>Apie mane</h2>
+    <p><b>Sveiki, aš esu Benediktas.</b></p>
+    <p>Tai mano mokyklos projektas, kurį noriu paversti realiu socialiniu projektu.</p>
   </div>
-
-  <!-- APIE MANE -->
-  <div class="about-me">
-    <img src="apie-mane.jpg" alt="Aš savanoriaujant">
-    <div>
-      <h2>Apie mane</h2>
-      <p><b>Sveiki, aš esu Benediktas.</b></p>
-      <p>Tai mano mokyklos projektas, kurį noriu paversti realiu socialiniu projektu. Projekto tikslas – skatinti socialinę veiklą tarp jaunimo ir organizacijų bendradarbiavimą, suteikti galimybę dalyvauti įvairiose veiklose, registruotis ir sekti savo dalyvavimą.</p>
-    </div>
-  </div>
+</div>
 
 </div>
 
 <script>
 // -------- LOGIN --------
 function login(){
-  const val = document.getElementById("loginInput").value.trim();
+  const val = loginInput.value.trim();
   if(!val) return alert("Įvesk vardą arba ORG kodą");
 
   let orgs = JSON.parse(localStorage.getItem("orgs")) || {};
@@ -72,7 +73,7 @@ function login(){
     if(!orgs[val]){
       const name = prompt("Organizacijos pavadinimas:");
       if(!name) return;
-      orgs[val] = { name: name, activities: [] };
+      orgs[val] = { name, activities: [] };
       localStorage.setItem("orgs", JSON.stringify(orgs));
     }
     localStorage.setItem("role","org");
@@ -81,186 +82,120 @@ function login(){
     localStorage.setItem("role","user");
     localStorage.setItem("user",val);
   }
-
   location.reload();
 }
 
 function logout(){
-  localStorage.removeItem("role");
-  localStorage.removeItem("user");
-  localStorage.removeItem("orgCode");
+  localStorage.clear();
   location.reload();
 }
 
-// -------- DUOMENYS --------
 function getOrgs(){ return JSON.parse(localStorage.getItem("orgs")) || {}; }
-function saveOrgs(orgs){ localStorage.setItem("orgs", JSON.stringify(orgs)); }
+function saveOrgs(o){ localStorage.setItem("orgs", JSON.stringify(o)); }
 
 // -------- VEIKLOS --------
-function addActivity(editId = null){
+function addActivity(editId=null){
   const orgCode = localStorage.getItem("orgCode");
-  if(!orgCode) return;
-
   const orgs = getOrgs();
   const org = orgs[orgCode];
 
-  const title = document.getElementById("title").value.trim();
-  const date = document.getElementById("date").value;
-  const timeFrom = document.getElementById("timeFrom").value;
-  const timeTo = document.getElementById("timeTo").value;
-  const age = document.getElementById("age").value;
-  const description = document.getElementById("description").value.trim();
-  const locationVal = document.getElementById("locationInput").value.trim();
+  const title = titleInput.value = title.value.trim();
+  const dateVal = date.value;
+  const dateFromVal = dateFrom.value;
+  const dateToVal = dateTo.value;
+  const timeF = timeFrom.value;
+  const timeT = timeTo.value;
+  const ageVal = age.value;
+  const desc = description.value.trim();
+  const loc = locationInput.value.trim();
 
-  if(!title || !date || !timeFrom || !timeTo || !age || !description){
+  if(!title || !dateVal || !dateFromVal || !dateToVal || !timeF || !timeT || !ageVal || !desc){
     return alert("Užpildyk visus laukus");
   }
 
-  if(editId){ 
-    const activity = org.activities.find(a => a.id === editId);
-    if(activity){
-      activity.title = title;
-      activity.date = date;
-      activity.timeFrom = timeFrom;
-      activity.timeTo = timeTo;
-      activity.age = Number(age);
-      activity.description = description;
-      activity.location = locationVal;
-    }
-  } else { 
+  if(editId){
+    const a = org.activities.find(x=>x.id===editId);
+    Object.assign(a,{title,date:dateVal,dateFrom:dateFromVal,dateTo:dateToVal,
+      timeFrom:timeF,timeTo:timeT,age:+ageVal,description:desc,location:loc});
+  } else {
     org.activities.push({
-      id: Date.now(),
-      title,
-      date,
-      timeFrom,
-      timeTo,
-      age: Number(age),
-      description,
-      location: locationVal,
-      registered: []
+      id:Date.now(), title,date:dateVal,dateFrom:dateFromVal,dateTo:dateToVal,
+      timeFrom:timeF,timeTo:timeT,age:+ageVal,description:desc,location:loc,
+      registered:[]
     });
   }
 
   saveOrgs(orgs);
-
-  document.getElementById("title").value = "";
-  document.getElementById("date").value = "";
-  document.getElementById("timeFrom").value = "";
-  document.getElementById("timeTo").value = "";
-  document.getElementById("age").value = "";
-  document.getElementById("description").value = "";
-  document.getElementById("locationInput").value = "";
-
+  document.querySelectorAll("#orgPanel input, #orgPanel textarea").forEach(e=>e.value="");
   renderActivities();
 }
 
-// -------- REDAGAVIMAS --------
-function editActivity(orgCode, activityId){
-  const orgs = getOrgs();
-  const activity = orgs[orgCode].activities.find(a => a.id === activityId);
-  if(!activity) return;
+function editActivity(orgCode,id){
+  const a = getOrgs()[orgCode].activities.find(x=>x.id===id);
+  title.value=a.title; date.value=a.date;
+  dateFrom.value=a.dateFrom; dateTo.value=a.dateTo;
+  timeFrom.value=a.timeFrom; timeTo.value=a.timeTo;
+  age.value=a.age; description.value=a.description;
+  locationInput.value=a.location;
 
-  document.getElementById("title").value = activity.title;
-  document.getElementById("date").value = activity.date;
-  document.getElementById("timeFrom").value = activity.timeFrom;
-  document.getElementById("timeTo").value = activity.timeTo;
-  document.getElementById("age").value = activity.age;
-  document.getElementById("description").value = activity.description;
-  document.getElementById("locationInput").value = activity.location;
-
-  const btn = document.querySelector("#orgPanel button");
-  btn.textContent = "Išsaugoti pakeitimus";
-  btn.onclick = () => addActivity(activityId);
+  const btn=document.querySelector("#orgPanel button");
+  btn.textContent="Išsaugoti pakeitimus";
+  btn.onclick=()=>addActivity(id);
 }
 
-// -------- TRYNIMAS --------
-function deleteActivity(orgCode, activityId){
-  if(!confirm("Ar tikrai norite ištrinti šią veiklą?")) return;
-  const orgs = getOrgs();
-  orgs[orgCode].activities = orgs[orgCode].activities.filter(a => a.id !== activityId);
-  saveOrgs(orgs);
-  renderActivities();
+function deleteActivity(orgCode,id){
+  if(!confirm("Ištrinti veiklą?")) return;
+  const o=getOrgs(); o[orgCode].activities=o[orgCode].activities.filter(a=>a.id!==id);
+  saveOrgs(o); renderActivities();
 }
 
-// -------- REGISTRACIJA --------
-function toggleRegister(orgCode, activityId){
-  const user = localStorage.getItem("user");
-  if(!user) return alert("Prisijunkite, kad galėtumėte registruotis");
-
-  const orgs = getOrgs();
-  const activity = orgs[orgCode].activities.find(a => a.id === activityId);
-
-  if(activity.registered.includes(user)){
-    activity.registered = activity.registered.filter(u => u !== user);
-  } else {
-    activity.registered.push(user);
-  }
-
-  saveOrgs(orgs);
-  renderActivities();
+function toggleRegister(orgCode,id){
+  const user=localStorage.getItem("user");
+  if(!user) return alert("Prisijunk");
+  const a=getOrgs()[orgCode].activities.find(x=>x.id===id);
+  a.registered.includes(user) ? a.registered=a.registered.filter(u=>u!==user) : a.registered.push(user);
+  saveOrgs(getOrgs()); renderActivities();
 }
 
 // -------- RENDER --------
 function renderActivities(){
-  const role = localStorage.getItem("role");
-  const activitiesContainer = document.getElementById("activitiesContainer");
-  activitiesContainer.innerHTML = "";
+  const role=localStorage.getItem("role");
+  activitiesContainer.innerHTML="";
+  orgPanel.style.display=role==="org"?"block":"none";
 
-  const orgPanel = document.getElementById("orgPanel");
-  orgPanel.style.display = role === "org" ? "block" : "none";
+  const orgs=getOrgs(), user=localStorage.getItem("user"), curOrg=localStorage.getItem("orgCode");
 
-  const orgs = getOrgs();
-  const user = localStorage.getItem("user");
-  const currentOrgCode = localStorage.getItem("orgCode");
-
-  Object.entries(orgs).forEach(([orgCode, org]) => {
-    org.activities.forEach(a => {
-      const isRegistered = user && a.registered.includes(user);
-      let timeStr = `⏰ ${a.timeFrom} – ${a.timeTo}`;
-      let regStatus = role==="user" ? (isRegistered ? "🟢 Užsiregistravęs" : "🔴 Neprisiregistravęs") : "";
-
-      let orgControls = "";
-      if(role==="org" && orgCode===currentOrgCode){
-        orgControls = `
-          <button class="edit-btn" onclick="editActivity('${orgCode}',${a.id})">✏️ Redaguoti</button>
-          <button class="delete-btn" onclick="deleteActivity('${orgCode}',${a.id})">🗑️ Ištrinti</button>
-        `;
-      }
-
-      activitiesContainer.innerHTML += `
-        <div class="card">
-          <h3>${a.title}</h3>
-          <p><b>🏢 ${org.name}</b></p>
-          <p>📅 ${a.date}</p>
-          <p>${timeStr}</p>
-          <p>🎂 Nuo ${a.age} m.</p>
-          <p>📝 ${a.description}</p>
-          <p>👥 Užsiregistravę: ${a.registered.length}</p>
-          ${a.location ? `<a href="${a.location}" target="_blank">📍 Vieta</a>` : ""}
-          ${role==="user" ? `<p>${regStatus}</p><button class="register-btn" onclick="toggleRegister('${orgCode}', ${a.id})">${isRegistered ? "❌ Atsiregistruoti" : "✅ Užsiregistruoti"}</button>` : ""}
-          ${orgControls}
-        </div>
-      `;
+  Object.entries(orgs).forEach(([code,org])=>{
+    org.activities.forEach(a=>{
+      const reg=user && a.registered.includes(user);
+      activitiesContainer.innerHTML+=`
+      <div class="card">
+        <h3>${a.title}</h3>
+        <p><b>🏢 ${org.name}</b></p>
+        <p>📅 ${a.date}</p>
+        <p>📆 Galioja: ${a.dateFrom} – ${a.dateTo}</p>
+        <p>⏰ ${a.timeFrom} – ${a.timeTo}</p>
+        <p>🎂 Nuo ${a.age} m.</p>
+        <p>📝 ${a.description}</p>
+        <p>👥 Užsiregistravę: ${a.registered.length}</p>
+        ${role==="org" && code===curOrg && a.registered.length ? `<p>📋 Dalyviai: ${a.registered.join(", ")}</p>`:""}
+        ${a.location?`<a href="${a.location}" target="_blank">📍 Vieta</a>`:""}
+        ${role==="user"?`<button class="register-btn" onclick="toggleRegister('${code}',${a.id})">${reg?"❌ Atsiregistruoti":"✅ Užsiregistruoti"}</button>`:""}
+        ${role==="org" && code===curOrg?`
+          <button class="edit-btn" onclick="editActivity('${code}',${a.id})">✏️</button>
+          <button class="delete-btn" onclick="deleteActivity('${code}',${a.id})">🗑️</button>`:""}
+      </div>`;
     });
   });
-
-  if(role==="org"){
-    const btn = document.querySelector("#orgPanel button");
-    btn.textContent = "Išsaugoti veiklą";
-    btn.onclick = () => addActivity();
-  }
 }
 
-// -------- START --------
-window.addEventListener("DOMContentLoaded", () => {
-  const role = localStorage.getItem("role");
-  if(role){
-    document.getElementById("loginSection").style.display = "none";
-    document.getElementById("activitiesSection").style.display = "block";
+document.addEventListener("DOMContentLoaded",()=>{
+  if(localStorage.getItem("role")){
+    loginSection.style.display="none";
+    activitiesSection.style.display="block";
     renderActivities();
   }
 });
 </script>
-
 </body>
 </html>
