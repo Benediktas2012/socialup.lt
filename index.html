@@ -10,15 +10,18 @@
 <body>
 <div class="container">
 
+<!-- LOGIN -->
 <div id="loginSection">
   <h1>Prisijungimas</h1>
   <input id="loginInput" placeholder="Vardas arba ORG-123">
   <button onclick="login()">Prisijungti</button>
 </div>
 
+<!-- VEIKLOS -->
 <div id="activitiesSection" style="display:none;">
   <h1>Socialinės veiklos</h1>
 
+  <!-- ORGANIZACIJA -->
   <div id="orgPanel" style="display:none;">
     <h2>Pridėti veiklą</h2>
     <input id="title" placeholder="Veiklos pavadinimas">
@@ -30,38 +33,37 @@
     <input id="age" type="number" min="1" placeholder="Nuo kelių metų">
     <textarea id="description" placeholder="Veiklos aprašymas"></textarea>
     <input id="locationInput" placeholder="Vietos nuoroda (Google Maps)">
-    <button id="saveBtn" onclick="addActivity()">Išsaugoti veiklą</button>
+    <button id="saveBtn" onclick="saveActivity()">Išsaugoti veiklą</button>
   </div>
 
   <div class="activities" id="activitiesContainer"></div>
   <button class="logout" onclick="logout()">Atsijungti</button>
 </div>
 
-<div class="about-me">
-  <img src="apie-mane.jpg">
-  <div>
-    <h2>Apie mane</h2>
-    <p><b>Sveiki, aš esu Benediktas.</b></p>
-    <p>Mokyklos socialinis projektas.</p>
-  </div>
-</div>
-
 </div>
 
 <script>
-// LOGIN
+/* ========= BENDRA ========= */
+function getOrgs(){
+  return JSON.parse(localStorage.getItem("orgs")) || {};
+}
+function saveOrgs(orgs){
+  localStorage.setItem("orgs", JSON.stringify(orgs));
+}
+
+/* ========= LOGIN ========= */
 function login(){
   const val = loginInput.value.trim();
   if(!val) return alert("Įvesk vardą arba ORG kodą");
 
-  let orgs = JSON.parse(localStorage.getItem("orgs")) || {};
+  let orgs = getOrgs();
 
   if(val.startsWith("ORG-")){
     if(!orgs[val]){
       const name = prompt("Organizacijos pavadinimas:");
       if(!name) return;
       orgs[val] = { name, activities: [] };
-      localStorage.setItem("orgs", JSON.stringify(orgs));
+      saveOrgs(orgs);
     }
     localStorage.setItem("role","org");
     localStorage.setItem("orgCode",val);
@@ -69,26 +71,28 @@ function login(){
     localStorage.setItem("role","user");
     localStorage.setItem("user",val);
   }
+
   location.reload();
 }
 
 function logout(){
-  localStorage.clear();
+  localStorage.removeItem("role");
+  localStorage.removeItem("user");
+  localStorage.removeItem("orgCode");
   location.reload();
 }
 
-function getOrgs(){ return JSON.parse(localStorage.getItem("orgs")) || {}; }
-function saveOrgs(o){ localStorage.setItem("orgs", JSON.stringify(o)); }
-
-// ADD / EDIT
+/* ========= VEIKLOS ========= */
 let editId = null;
 
-function addActivity(){
+function saveActivity(){
   const orgCode = localStorage.getItem("orgCode");
+  if(!orgCode) return;
+
   const orgs = getOrgs();
   const org = orgs[orgCode];
 
-  const data = {
+  const activity = {
     title: title.value.trim(),
     date: date.value,
     dateFrom: dateFrom.value,
@@ -100,60 +104,90 @@ function addActivity(){
     location: locationInput.value.trim()
   };
 
-  if(Object.values(data).some(v=>!v)) return alert("Užpildyk visus laukus");
+  if(Object.values(activity).some(v => !v)){
+    return alert("Užpildyk visus laukus");
+  }
 
   if(editId){
-    Object.assign(org.activities.find(a=>a.id===editId), data);
+    Object.assign(org.activities.find(a => a.id === editId), activity);
     editId = null;
     saveBtn.textContent = "Išsaugoti veiklą";
   } else {
-    org.activities.push({ id:Date.now(), ...data, registered:[] });
+    org.activities.push({
+      id: Date.now(),
+      ...activity,
+      registered: []
+    });
   }
 
   saveOrgs(orgs);
-  document.querySelectorAll("#orgPanel input, #orgPanel textarea").forEach(e=>e.value="");
+  clearForm();
   renderActivities();
 }
 
-function editActivity(code,id){
-  const a = getOrgs()[code].activities.find(x=>x.id===id);
-  Object.entries(a).forEach(([k,v])=>{
-    if(document.getElementById(k)) document.getElementById(k).value=v;
-  });
+function clearForm(){
+  document.querySelectorAll("#orgPanel input, #orgPanel textarea")
+    .forEach(e => e.value = "");
+}
+
+function editActivity(orgCode,id){
+  const a = getOrgs()[orgCode].activities.find(x => x.id === id);
+  title.value = a.title;
+  date.value = a.date;
+  dateFrom.value = a.dateFrom;
+  dateTo.value = a.dateTo;
+  timeFrom.value = a.timeFrom;
+  timeTo.value = a.timeTo;
+  age.value = a.age;
+  description.value = a.description;
+  locationInput.value = a.location;
+
   editId = id;
   saveBtn.textContent = "Išsaugoti pakeitimus";
 }
 
-function deleteActivity(code,id){
+function deleteActivity(orgCode,id){
   if(!confirm("Ištrinti veiklą?")) return;
-  const o=getOrgs();
-  o[code].activities=o[code].activities.filter(a=>a.id!==id);
-  saveOrgs(o);
+  const orgs = getOrgs();
+  orgs[orgCode].activities = orgs[orgCode].activities.filter(a => a.id !== id);
+  saveOrgs(orgs);
   renderActivities();
 }
 
-// REGISTER
-function toggleRegister(code,id){
-  const user=localStorage.getItem("user");
-  const a=getOrgs()[code].activities.find(x=>x.id===id);
-  a.registered.includes(user)
-    ? a.registered=a.registered.filter(u=>u!==user)
-    : a.registered.push(user);
-  saveOrgs(getOrgs());
+/* ========= REGISTRACIJA ========= */
+function toggleRegister(orgCode,id){
+  const user = localStorage.getItem("user");
+  if(!user) return;
+
+  const orgs = getOrgs();
+  const a = orgs[orgCode].activities.find(x => x.id === id);
+
+  if(a.registered.includes(user)){
+    a.registered = a.registered.filter(u => u !== user);
+  } else {
+    a.registered.push(user);
+  }
+
+  saveOrgs(orgs);
   renderActivities();
 }
 
-// RENDER
+/* ========= RENDER ========= */
 function renderActivities(){
-  activitiesContainer.innerHTML="";
-  const role=localStorage.getItem("role");
-  orgPanel.style.display=role==="org"?"block":"none";
+  activitiesContainer.innerHTML = "";
 
-  const orgs=getOrgs(), user=localStorage.getItem("user"), cur=localStorage.getItem("orgCode");
+  const role = localStorage.getItem("role");
+  const orgs = getOrgs();
+  const user = localStorage.getItem("user");
+  const curOrg = localStorage.getItem("orgCode");
 
-  Object.entries(orgs).forEach(([code,org])=>{
+  orgPanel.style.display = role === "org" ? "block" : "none";
+
+  Object.entries(orgs).forEach(([code, org])=>{
     org.activities.forEach(a=>{
-      activitiesContainer.innerHTML+=`
+      const isReg = user && a.registered.includes(user);
+
+      activitiesContainer.innerHTML += `
       <div class="card">
         <h3>${a.title}</h3>
         <p><b>🏢 ${org.name}</b></p>
@@ -163,24 +197,35 @@ function renderActivities(){
         <p>🎂 Nuo ${a.age} m.</p>
         <p>📝 ${a.description}</p>
         <p>👥 Užsiregistravę: ${a.registered.length}</p>
-        ${role==="org" && code===cur && a.registered.length ? `<p>📋 ${a.registered.join(", ")}</p>`:""}
-        ${a.location?`<a href="${a.location}" target="_blank">📍 Vieta</a>`:""}
-        ${role==="user"?`<button class="register-btn" onclick="toggleRegister('${code}',${a.id})">Registruotis</button>`:""}
-        ${role==="org" && code===cur?`
-          <button class="edit-btn" onclick="editActivity('${code}',${a.id})">✏️</button>
-          <button class="delete-btn" onclick="deleteActivity('${code}',${a.id})">🗑️</button>`:""}
+
+        ${role==="org" && code===curOrg && a.registered.length
+          ? `<p>📋 Dalyviai: ${a.registered.join(", ")}</p>` : ""}
+
+        ${a.location ? `<a href="${a.location}" target="_blank">📍 Vieta</a>` : ""}
+
+        ${role==="user"
+          ? `<button class="register-btn"
+              onclick="toggleRegister('${code}',${a.id})">
+              ${isReg ? "❌ Atsiregistruoti" : "✅ Užsiregistruoti"}
+            </button>` : ""}
+
+        ${role==="org" && code===curOrg
+          ? `<button class="edit-btn" onclick="editActivity('${code}',${a.id})">✏️</button>
+             <button class="delete-btn" onclick="deleteActivity('${code}',${a.id})">🗑️</button>` : ""}
       </div>`;
     });
   });
 }
 
+/* ========= START ========= */
 document.addEventListener("DOMContentLoaded",()=>{
   if(localStorage.getItem("role")){
-    loginSection.style.display="none";
-    activitiesSection.style.display="block";
+    loginSection.style.display = "none";
+    activitiesSection.style.display = "block";
     renderActivities();
   }
 });
 </script>
+
 </body>
 </html>
