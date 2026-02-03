@@ -157,21 +157,31 @@ function renderActivities(){
 
   Object.entries(orgs).forEach(([orgCode, org]) => {
     org.activities.forEach(a => {
-      const isOrgViewingOwn = role === "org" && orgCode === currentOrgCode;
       const isRegistered = user && a.registered.includes(user);
+
+      // Gražesnis laikas
+      let [h, m] = a.timeFrom.split(":").map(Number);
+      let endHour = h + a.hours;
+      let endHourStr = endHour < 10 ? "0"+endHour : endHour;
+      let timeStr = `⏰ ${a.timeFrom} – ${endHourStr}:${m < 10 ? "0"+m : m}`;
+
+      // Registracijos statusas (vartotojams)
+      let regStatus = "";
+      if(role==="user") {
+        regStatus = isRegistered ? "🟢 Užsiregistravęs" : "🔴 Neprisiregistravęs";
+      }
 
       activitiesContainer.innerHTML += `
         <div class="card">
           <h3>${a.title}</h3>
           <p><b>🏢 ${org.name}</b></p>
           <p>📅 ${a.date}</p>
-          <p>⏰ Nuo ${a.timeFrom}</p>
-          <p>⏱️ ${a.hours} val.</p>
+          <p>${timeStr}</p>
           <p>🎂 Nuo ${a.age} m.</p>
           <p>📝 ${a.description}</p>
           <p>👥 Užsiregistravę: ${a.registered.length}</p>
           ${a.location ? `<a href="${a.location}" target="_blank">📍 Vieta</a>` : ""}
-          ${role === "user" ? `<button onclick="toggleRegister('${orgCode}', ${a.id})">${isRegistered ? "❌ Atsiregistruoti" : "✅ Užsiregistruoti"}</button>` : ""}
+          ${role === "user" ? `<p>${regStatus}</p><button class="register-btn" onclick="toggleRegister('${orgCode}', ${a.id})">${isRegistered ? "❌ Atsiregistruoti" : "✅ Užsiregistruoti"}</button>` : ""}
         </div>
       `;
     });
