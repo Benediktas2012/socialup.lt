@@ -13,7 +13,7 @@
   <!-- LOGIN -->
   <div id="loginSection">
     <h1>Prisijungimas</h1>
-    <input type="text" id="loginInput" placeholder="Vardas arba ORG-123">
+    <input id="loginInput" placeholder="Vardas arba ORG-123">
     <button onclick="login()">Prisijungti</button>
   </div>
 
@@ -21,11 +21,14 @@
   <div id="activitiesSection" style="display:none;">
     <h1>Socialinės veiklos</h1>
 
-    <!-- Tik organizacijai -->
+    <!-- ORGANIZACIJAI -->
     <div id="orgPanel" style="display:none;">
       <input id="title" placeholder="Veiklos pavadinimas">
-      <input id="date" placeholder="Data (pvz. 2026-02-30)">
-      <input id="hours" placeholder="Valandos">
+      <input id="date" type="date">
+      <input id="timeFrom" type="time">
+      <input id="timeTo" type="time">
+      <input id="age" type="number" placeholder="Nuo kelių metų">
+      <input id="location" placeholder="Vietos nuoroda (Google Maps)">
       <button onclick="addActivity()">Išsaugoti veiklą</button>
     </div>
 
@@ -33,137 +36,155 @@
     <button class="logout" onclick="logout()">Atsijungti</button>
   </div>
 
-  <!-- APIE MANE -->
-  <div class="about-me">
-    <img src="apie-mane.jpg" alt="Aš savanoriaujant">
-    <div>
-      <h2>Apie mane</h2>
-      <p><b>Sveiki, aš esu Benediktas.</b></p>
-      <p>
-        Tai yra mano mokyklos projektas, tačiau noriu jį praplėsti į
-        socialinį projektą. Šio puslapio tikslas – padėti žmonėms
-        lengviau rasti socialines veiklas ir savanorystės galimybes.
-      </p>
-      <p>
-        Šiuo metu ieškau partnerių ir organizacijų, kurios norėtų
-        prisidėti prie šios idėjos vystymo.
-      </p>
-    </div>
-  </div>
-
 </div>
 
 <script>
 let editId = null;
 
+/* ---------- LOGIN ---------- */
 function login(){
   const val = loginInput.value.trim();
   if(!val) return alert("Įvesk vardą arba ORG kodą");
 
   if(val.startsWith("ORG-")){
     let orgs = JSON.parse(localStorage.getItem("orgs")) || {};
+
     if(!orgs[val]){
-      const name = prompt("Įveskite organizacijos pavadinimą");
+      const name = prompt("Organizacijos pavadinimas:");
       if(!name) return;
       orgs[val] = { name, activities: [] };
       localStorage.setItem("orgs", JSON.stringify(orgs));
     }
+
     localStorage.setItem("role","org");
     localStorage.setItem("orgCode",val);
   } else {
     localStorage.setItem("role","user");
     localStorage.setItem("user",val);
   }
+
   location.reload();
 }
 
 function logout(){
-  localStorage.clear();
+  localStorage.removeItem("role");
+  localStorage.removeItem("orgCode");
+  localStorage.removeItem("user");
   location.reload();
 }
 
-function getOrg(){
-  const orgs = JSON.parse(localStorage.getItem("orgs")) || {};
-  return orgs[localStorage.getItem("orgCode")];
+/* ---------- ORGANIZACIJOS DUOMENYS ---------- */
+function getOrgs(){
+  return JSON.parse(localStorage.getItem("orgs")) || {};
 }
 
-function saveOrg(org){
-  const orgs = JSON.parse(localStorage.getItem("orgs")) || {};
-  orgs[localStorage.getItem("orgCode")] = org;
+function saveOrgs(orgs){
   localStorage.setItem("orgs", JSON.stringify(orgs));
 }
 
+function getOrg(){
+  const orgs = getOrgs();
+  return orgs[localStorage.getItem("orgCode")];
+}
+
+/* ---------- VEIKLOS ---------- */
 function addActivity(){
-  const org = getOrg();
-  if(!org) return;
+  const orgs = getOrgs();
+  const code = localStorage.getItem("orgCode");
+  const org = orgs[code];
+
+  if(!title.value || !date.value || !timeFrom.value || !timeTo.value){
+    return alert("Užpildyk visus laukus");
+  }
 
   if(editId){
     const a = org.activities.find(a=>a.id===editId);
-    a.name = title.value;
-    a.date = date.value;
-    a.hours = hours.value;
+    Object.assign(a,{
+      title: title.value,
+      date: date.value,
+      timeFrom: timeFrom.value,
+      timeTo: timeTo.value,
+      age: age.value,
+      location: location.value
+    });
     editId = null;
   } else {
     org.activities.push({
       id: Date.now(),
-      name: title.value,
+      title: title.value,
       date: date.value,
-      hours: hours.value
+      timeFrom: timeFrom.value,
+      timeTo: timeTo.value,
+      age: age.value,
+      location: location.value
     });
   }
 
-  saveOrg(org);
-  title.value = date.value = hours.value = "";
+  saveOrgs(orgs);
+  clearForm();
   renderOrg();
+}
+
+function clearForm(){
+  title.value = date.value = timeFrom.value =
+  timeTo.value = age.value = location.value = "";
 }
 
 function editActivity(id){
   const a = getOrg().activities.find(a=>a.id===id);
-  title.value = a.name;
+  title.value = a.title;
   date.value = a.date;
-  hours.value = a.hours;
+  timeFrom.value = a.timeFrom;
+  timeTo.value = a.timeTo;
+  age.value = a.age;
+  location.value = a.location;
   editId = id;
 }
 
 function deleteActivity(id){
-  const org = getOrg();
+  const orgs = getOrgs();
+  const org = orgs[localStorage.getItem("orgCode")];
   org.activities = org.activities.filter(a=>a.id!==id);
-  saveOrg(org);
+  saveOrgs(orgs);
   renderOrg();
 }
 
+/* ---------- RENDER ---------- */
 function renderOrg(){
-  orgPanel.style.display = "block";
-  activitiesContainer.innerHTML = "";
+  orgPanel.style.display="block";
+  activitiesContainer.innerHTML="";
   getOrg().activities.forEach(a=>{
-    activitiesContainer.innerHTML += `
-      <div class="card">
-        <h3>${a.name}</h3>
-        <p>📅 ${a.date}</p>
-        <p>⏱️ ${a.hours} val.</p>
-        <button onclick="editActivity(${a.id})">✏️ Redaguoti</button>
-        <button onclick="deleteActivity(${a.id})">🗑️ Ištrinti</button>
-      </div>
-    `;
+    activitiesContainer.innerHTML += cardHTML(a,true);
   });
 }
 
 function renderUser(){
-  const orgs = JSON.parse(localStorage.getItem("orgs")) || {};
-  activitiesContainer.innerHTML = "";
+  const orgs = getOrgs();
+  activitiesContainer.innerHTML="";
   Object.values(orgs).forEach(org=>{
     org.activities.forEach(a=>{
-      activitiesContainer.innerHTML += `
-        <div class="card">
-          <h3>${a.name}</h3>
-          <p>📅 ${a.date}</p>
-          <p>⏱️ ${a.hours} val.</p>
-        </div>
-      `;
+      activitiesContainer.innerHTML += cardHTML(a,false,org.name);
     });
   });
 }
 
+function cardHTML(a,isOrg,orgName=""){
+  return `
+  <div class="card">
+    <h3>${a.title}</h3>
+    ${orgName ? `<p><b>${orgName}</b></p>` : ""}
+    <p>📅 ${a.date}</p>
+    <p>⏰ ${a.timeFrom} – ${a.timeTo}</p>
+    <p>🎂 Nuo ${a.age || "?"} m.</p>
+    ${a.location ? `<a href="${a.location}" target="_blank">📍 Vieta</a>` : ""}
+    ${isOrg ? `
+      <button onclick="editActivity(${a.id})">✏️</button>
+      <button onclick="deleteActivity(${a.id})">🗑️</button>
+    ` : ""}
+  </div>`;
+}
+
+/* ---------- START ---------- */
 const role = localStorage.getItem("role");
 if(role){
   loginSection.style.display="none";
