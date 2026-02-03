@@ -29,7 +29,7 @@
       <input id="hours" type="number" min="1" placeholder="Kiek valandų duos">
       <input id="age" type="number" min="1" placeholder="Nuo kelių metų">
       <textarea id="description" placeholder="Veiklos aprašymas"></textarea>
-      <input id="location" placeholder="Vietos nuoroda (Google Maps)">
+      <input id="locationInput" placeholder="Vietos nuoroda (Google Maps)">
       <button onclick="addActivity()">Išsaugoti veiklą</button>
     </div>
 
@@ -86,13 +86,16 @@ function saveOrgs(orgs){
   localStorage.setItem("orgs", JSON.stringify(orgs));
 }
 function getOrg(){
-  return getOrgs()[localStorage.getItem("orgCode")];
+  const orgCode = localStorage.getItem("orgCode");
+  const orgs = getOrgs();
+  return orgs[orgCode];
 }
 
 /* -------- VEIKLOS -------- */
 function addActivity(){
   const orgs = getOrgs();
-  const org = orgs[localStorage.getItem("orgCode")];
+  const orgCode = localStorage.getItem("orgCode");
+  const org = orgs[orgCode];
 
   if(!title.value || !date.value || !timeFrom.value || !hours.value || !age.value || !description.value){
     return alert("Užpildyk visus laukus");
@@ -106,19 +109,24 @@ function addActivity(){
     hours: Number(hours.value),
     age: Number(age.value),
     description: description.value,
-    location: location.value,
-    registered: []   // <<< REGISTRACIJOS
+    location: locationInput.value,
+    registered: []
   });
 
   saveOrgs(orgs);
+
+  // Išvalyti formą
   title.value = date.value = timeFrom.value = hours.value =
-  age.value = description.value = location.value = "";
-  renderOrg();
+  age.value = description.value = locationInput.value = "";
+
+  renderActivities(); // rodyti visiems
 }
 
 /* -------- REGISTRACIJA -------- */
 function toggleRegister(orgCode, activityId){
   const user = localStorage.getItem("user");
+  if(!user) return alert("Prisijunkite, kad galėtumėte registruotis");
+
   const orgs = getOrgs();
   const activity = orgs[orgCode].activities.find(a=>a.id===activityId);
 
@@ -129,56 +137,52 @@ function toggleRegister(orgCode, activityId){
   }
 
   saveOrgs(orgs);
-  renderUser();
+  renderActivities();
 }
 
 /* -------- RENDER -------- */
-function renderOrg(){
-  orgPanel.style.display="block";
+function renderActivities(){
+  const role = localStorage.getItem("role");
+  const activitiesContainer = document.getElementById("activitiesContainer");
   activitiesContainer.innerHTML="";
-  getOrg().activities.forEach(a=>{
-    activitiesContainer.innerHTML += cardHTML(a,true,getOrg().name,localStorage.getItem("orgCode"));
-  });
-}
 
-function renderUser(){
+  const orgPanel = document.getElementById("orgPanel");
+  if(role==="org") orgPanel.style.display="block";
+
   const orgs = getOrgs();
-  activitiesContainer.innerHTML="";
-  Object.entries(orgs).forEach(([code,org])=>{
+  const user = localStorage.getItem("user");
+
+  Object.entries(orgs).forEach(([orgCode,org])=>{
     org.activities.forEach(a=>{
-      activitiesContainer.innerHTML += cardHTML(a,false,org.name,code);
+      const isRegistered = user && a.registered.includes(user);
+      const isOrg = role==="org" && localStorage.getItem("orgCode")===orgCode;
+
+      activitiesContainer.innerHTML += `
+      <div class="card">
+        <h3>${a.title}</h3>
+        <p><b>🏢 ${org.name}</b></p>
+        <p>📅 ${a.date}</p>
+        <p>⏰ Nuo ${a.timeFrom}</p>
+        <p>⏱️ ${a.hours} val.</p>
+        <p>🎂 Nuo ${a.age} m.</p>
+        <p>📝 ${a.description}</p>
+        <p>👥 Užsiregistravę: ${a.registered.length}</p>
+        ${a.location ? `<a href="${a.location}" target="_blank">📍 Vieta</a>` : ""}
+        ${!isOrg && role==="user" ? `
+          <button onclick="toggleRegister('${orgCode}',${a.id})">
+            ${isRegistered ? "❌ Atsiregistruoti" : "✅ Užsiregistruoti"}
+          </button>` : ""}
+      </div>`;
     });
   });
-}
-
-function cardHTML(a,isOrg,orgName,orgCode){
-  const user = localStorage.getItem("user");
-  const isRegistered = a.registered?.includes(user);
-
-  return `
-  <div class="card">
-    <h3>${a.title}</h3>
-    <p><b>🏢 ${orgName}</b></p>
-    <p>📅 ${a.date}</p>
-    <p>⏰ Nuo ${a.timeFrom}</p>
-    <p>⏱️ ${a.hours} val.</p>
-    <p>🎂 Nuo ${a.age} m.</p>
-    <p>📝 ${a.description}</p>
-    <p>👥 Užsiregistravę: ${a.registered.length}</p>
-    ${a.location ? `<a href="${a.location}" target="_blank">📍 Vieta</a>` : ""}
-    ${!isOrg ? `
-      <button onclick="toggleRegister('${orgCode}',${a.id})">
-        ${isRegistered ? "❌ Atsiregistruoti" : "✅ Užsiregistruoti"}
-      </button>` : ""}
-  </div>`;
 }
 
 /* -------- START -------- */
 const role = localStorage.getItem("role");
 if(role){
-  loginSection.style.display="none";
-  activitiesSection.style.display="block";
-  role==="org" ? renderOrg() : renderUser();
+  document.getElementById("loginSection").style.display="none";
+  document.getElementById("activitiesSection").style.display="block";
+  renderActivities();
 }
 </script>
 
