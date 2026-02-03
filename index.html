@@ -52,16 +52,17 @@
 <script>
 /* -------- LOGIN -------- */
 function login(){
-  const val = loginInput.value.trim();
+  const val = document.getElementById("loginInput").value.trim();
   if(!val) return alert("Įvesk vardą arba ORG kodą");
 
   let orgs = JSON.parse(localStorage.getItem("orgs")) || {};
 
   if(val.startsWith("ORG-")){
+    // Sukuriam organizaciją, jei jos dar nėra
     if(!orgs[val]){
       const name = prompt("Organizacijos pavadinimas:");
       if(!name) return;
-      orgs[val] = { name, activities: [] };
+      orgs[val] = { name: name, activities: [] };
       localStorage.setItem("orgs", JSON.stringify(orgs));
     }
     localStorage.setItem("role","org");
@@ -70,11 +71,14 @@ function login(){
     localStorage.setItem("role","user");
     localStorage.setItem("user",val);
   }
+
   location.reload();
 }
 
 function logout(){
-  localStorage.clear();
+  localStorage.removeItem("role");
+  localStorage.removeItem("user");
+  localStorage.removeItem("orgCode");
   location.reload();
 }
 
@@ -85,41 +89,51 @@ function getOrgs(){
 function saveOrgs(orgs){
   localStorage.setItem("orgs", JSON.stringify(orgs));
 }
-function getOrg(){
-  const orgCode = localStorage.getItem("orgCode");
-  const orgs = getOrgs();
-  return orgs[orgCode];
-}
 
 /* -------- VEIKLOS -------- */
 function addActivity(){
-  const orgs = getOrgs();
   const orgCode = localStorage.getItem("orgCode");
+  if(!orgCode) return;
+
+  const orgs = getOrgs();
   const org = orgs[orgCode];
 
-  if(!title.value || !date.value || !timeFrom.value || !hours.value || !age.value || !description.value){
+  const title = document.getElementById("title").value.trim();
+  const date = document.getElementById("date").value;
+  const timeFrom = document.getElementById("timeFrom").value;
+  const hours = document.getElementById("hours").value;
+  const age = document.getElementById("age").value;
+  const description = document.getElementById("description").value.trim();
+  const locationVal = document.getElementById("locationInput").value.trim();
+
+  if(!title || !date || !timeFrom || !hours || !age || !description){
     return alert("Užpildyk visus laukus");
   }
 
   org.activities.push({
     id: Date.now(),
-    title: title.value,
-    date: date.value,
-    timeFrom: timeFrom.value,
-    hours: Number(hours.value),
-    age: Number(age.value),
-    description: description.value,
-    location: locationInput.value,
+    title: title,
+    date: date,
+    timeFrom: timeFrom,
+    hours: Number(hours),
+    age: Number(age),
+    description: description,
+    location: locationVal,
     registered: []
   });
 
   saveOrgs(orgs);
 
   // Išvalyti formą
-  title.value = date.value = timeFrom.value = hours.value =
-  age.value = description.value = locationInput.value = "";
+  document.getElementById("title").value = "";
+  document.getElementById("date").value = "";
+  document.getElementById("timeFrom").value = "";
+  document.getElementById("hours").value = "";
+  document.getElementById("age").value = "";
+  document.getElementById("description").value = "";
+  document.getElementById("locationInput").value = "";
 
-  renderActivities(); // rodyti visiems
+  renderActivities();
 }
 
 /* -------- REGISTRACIJA -------- */
@@ -129,6 +143,8 @@ function toggleRegister(orgCode, activityId){
 
   const orgs = getOrgs();
   const activity = orgs[orgCode].activities.find(a=>a.id===activityId);
+
+  if(!activity) return;
 
   if(activity.registered.includes(user)){
     activity.registered = activity.registered.filter(u=>u!==user);
@@ -144,46 +160,47 @@ function toggleRegister(orgCode, activityId){
 function renderActivities(){
   const role = localStorage.getItem("role");
   const activitiesContainer = document.getElementById("activitiesContainer");
-  activitiesContainer.innerHTML="";
+  activitiesContainer.innerHTML = "";
 
   const orgPanel = document.getElementById("orgPanel");
-  if(role==="org") orgPanel.style.display="block";
+  orgPanel.style.display = role==="org" ? "block" : "none";
 
   const orgs = getOrgs();
   const user = localStorage.getItem("user");
+  const currentOrgCode = localStorage.getItem("orgCode");
 
   Object.entries(orgs).forEach(([orgCode,org])=>{
     org.activities.forEach(a=>{
+      const isOrgViewingOwn = role==="org" && orgCode===currentOrgCode;
       const isRegistered = user && a.registered.includes(user);
-      const isOrg = role==="org" && localStorage.getItem("orgCode")===orgCode;
 
       activitiesContainer.innerHTML += `
-      <div class="card">
-        <h3>${a.title}</h3>
-        <p><b>🏢 ${org.name}</b></p>
-        <p>📅 ${a.date}</p>
-        <p>⏰ Nuo ${a.timeFrom}</p>
-        <p>⏱️ ${a.hours} val.</p>
-        <p>🎂 Nuo ${a.age} m.</p>
-        <p>📝 ${a.description}</p>
-        <p>👥 Užsiregistravę: ${a.registered.length}</p>
-        ${a.location ? `<a href="${a.location}" target="_blank">📍 Vieta</a>` : ""}
-        ${!isOrg && role==="user" ? `
-          <button onclick="toggleRegister('${orgCode}',${a.id})">
-            ${isRegistered ? "❌ Atsiregistruoti" : "✅ Užsiregistruoti"}
-          </button>` : ""}
-      </div>`;
+        <div class="card">
+          <h3>${a.title}</h3>
+          <p><b>🏢 ${org.name}</b></p>
+          <p>📅 ${a.date}</p>
+          <p>⏰ Nuo ${a.timeFrom}</p>
+          <p>⏱️ ${a.hours} val.</p>
+          <p>🎂 Nuo ${a.age} m.</p>
+          <p>📝 ${a.description}</p>
+          <p>👥 Užsiregistravę: ${a.registered.length}</p>
+          ${a.location ? `<a href="${a.location}" target="_blank">📍 Vieta</a>` : ""}
+          ${role==="user" ? `<button onclick="toggleRegister('${orgCode}',${a.id})">${isRegistered ? "❌ Atsiregistruoti" : "✅ Užsiregistruoti"}</button>` : ""}
+        </div>
+      `;
     });
   });
 }
 
 /* -------- START -------- */
-const role = localStorage.getItem("role");
-if(role){
-  document.getElementById("loginSection").style.display="none";
-  document.getElementById("activitiesSection").style.display="block";
-  renderActivities();
-}
+window.addEventListener("DOMContentLoaded", ()=>{
+  const role = localStorage.getItem("role");
+  if(role){
+    document.getElementById("loginSection").style.display="none";
+    document.getElementById("activitiesSection").style.display="block";
+    renderActivities();
+  }
+});
 </script>
 
 </body>
