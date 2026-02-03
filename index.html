@@ -40,10 +40,24 @@
   <button class="logout" onclick="logout()">Atsijungti</button>
 </div>
 
+<!-- APIE MANE (GRĄŽINTA) -->
+<div class="about-me">
+  <img src="apie-mane.jpg" alt="Aš savanoriaujant">
+  <div>
+    <h2>Apie mane</h2>
+    <p><b>Sveiki, aš esu Benediktas.</b></p>
+    <p>
+      Tai mano mokyklos projektas, kurį noriu paversti realiu socialiniu projektu.
+      Projekto tikslas – skatinti jaunimą įsitraukti į socialines veiklas ir
+      palengvinti bendradarbiavimą tarp organizacijų ir savanorių.
+    </p>
+  </div>
+</div>
+
 </div>
 
 <script>
-/* ========= BENDRA ========= */
+/* ===== BENDRA ===== */
 function getOrgs(){
   return JSON.parse(localStorage.getItem("orgs")) || {};
 }
@@ -51,12 +65,12 @@ function saveOrgs(orgs){
   localStorage.setItem("orgs", JSON.stringify(orgs));
 }
 
-/* ========= LOGIN ========= */
+/* ===== LOGIN ===== */
 function login(){
   const val = loginInput.value.trim();
   if(!val) return alert("Įvesk vardą arba ORG kodą");
 
-  let orgs = getOrgs();
+  const orgs = getOrgs();
 
   if(val.startsWith("ORG-")){
     if(!orgs[val]){
@@ -71,7 +85,6 @@ function login(){
     localStorage.setItem("role","user");
     localStorage.setItem("user",val);
   }
-
   location.reload();
 }
 
@@ -82,13 +95,11 @@ function logout(){
   location.reload();
 }
 
-/* ========= VEIKLOS ========= */
+/* ===== VEIKLOS ===== */
 let editId = null;
 
 function saveActivity(){
   const orgCode = localStorage.getItem("orgCode");
-  if(!orgCode) return;
-
   const orgs = getOrgs();
   const org = orgs[orgCode];
 
@@ -116,66 +127,43 @@ function saveActivity(){
     org.activities.push({
       id: Date.now(),
       ...activity,
-      registered: []
+      registered: []   // {name, day, time}
     });
   }
 
   saveOrgs(orgs);
-  clearForm();
+  document.querySelectorAll("#orgPanel input, #orgPanel textarea").forEach(e => e.value="");
   renderActivities();
 }
 
-function clearForm(){
-  document.querySelectorAll("#orgPanel input, #orgPanel textarea")
-    .forEach(e => e.value = "");
-}
-
-function editActivity(orgCode,id){
-  const a = getOrgs()[orgCode].activities.find(x => x.id === id);
-  title.value = a.title;
-  date.value = a.date;
-  dateFrom.value = a.dateFrom;
-  dateTo.value = a.dateTo;
-  timeFrom.value = a.timeFrom;
-  timeTo.value = a.timeTo;
-  age.value = a.age;
-  description.value = a.description;
-  locationInput.value = a.location;
-
-  editId = id;
-  saveBtn.textContent = "Išsaugoti pakeitimus";
-}
-
-function deleteActivity(orgCode,id){
-  if(!confirm("Ištrinti veiklą?")) return;
-  const orgs = getOrgs();
-  orgs[orgCode].activities = orgs[orgCode].activities.filter(a => a.id !== id);
-  saveOrgs(orgs);
-  renderActivities();
-}
-
-/* ========= REGISTRACIJA ========= */
-function toggleRegister(orgCode,id){
+/* ===== REGISTRACIJA SU DATA + LAIKU ===== */
+function toggleRegister(orgCode, id){
   const user = localStorage.getItem("user");
   if(!user) return;
 
   const orgs = getOrgs();
-  const a = orgs[orgCode].activities.find(x => x.id === id);
+  const activity = orgs[orgCode].activities.find(a => a.id === id);
 
-  if(a.registered.includes(user)){
-    a.registered = a.registered.filter(u => u !== user);
+  const existing = activity.registered.find(r => r.name === user);
+
+  if(existing){
+    activity.registered = activity.registered.filter(r => r.name !== user);
   } else {
-    a.registered.push(user);
+    const day = prompt("Kurią dieną ateisi? (YYYY-MM-DD)");
+    if(!day) return;
+    const time = prompt("Kurią valandą ateisi? (HH:MM)");
+    if(!time) return;
+
+    activity.registered.push({ name: user, day, time });
   }
 
   saveOrgs(orgs);
   renderActivities();
 }
 
-/* ========= RENDER ========= */
+/* ===== RENDER ===== */
 function renderActivities(){
   activitiesContainer.innerHTML = "";
-
   const role = localStorage.getItem("role");
   const orgs = getOrgs();
   const user = localStorage.getItem("user");
@@ -185,7 +173,7 @@ function renderActivities(){
 
   Object.entries(orgs).forEach(([code, org])=>{
     org.activities.forEach(a=>{
-      const isReg = user && a.registered.includes(user);
+      const isReg = user && a.registered.some(r => r.name === user);
 
       activitiesContainer.innerHTML += `
       <div class="card">
@@ -199,25 +187,22 @@ function renderActivities(){
         <p>👥 Užsiregistravę: ${a.registered.length}</p>
 
         ${role==="org" && code===curOrg && a.registered.length
-          ? `<p>📋 Dalyviai: ${a.registered.join(", ")}</p>` : ""}
+          ? `<p>📋 Dalyviai:<br>
+             ${a.registered.map(r => `👤 ${r.name} – ${r.day} ${r.time}`).join("<br>")}
+             </p>` : ""}
 
         ${a.location ? `<a href="${a.location}" target="_blank">📍 Vieta</a>` : ""}
 
         ${role==="user"
-          ? `<button class="register-btn"
-              onclick="toggleRegister('${code}',${a.id})">
+          ? `<button class="register-btn" onclick="toggleRegister('${code}',${a.id})">
               ${isReg ? "❌ Atsiregistruoti" : "✅ Užsiregistruoti"}
             </button>` : ""}
-
-        ${role==="org" && code===curOrg
-          ? `<button class="edit-btn" onclick="editActivity('${code}',${a.id})">✏️</button>
-             <button class="delete-btn" onclick="deleteActivity('${code}',${a.id})">🗑️</button>` : ""}
       </div>`;
     });
   });
 }
 
-/* ========= START ========= */
+/* ===== START ===== */
 document.addEventListener("DOMContentLoaded",()=>{
   if(localStorage.getItem("role")){
     loginSection.style.display = "none";
