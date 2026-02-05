@@ -1,66 +1,53 @@
 let currentUser = null;
-let role = null;
+let currentRole = null;
 let selectedActivity = null;
 
 const activities = JSON.parse(localStorage.getItem("activities")) || [];
 
-// LOGIN
+/* ---------- AUTH ---------- */
 
-document.getElementById("login-user").onclick = () => {
+document.getElementById("user-login-form").addEventListener("submit", e => {
+  e.preventDefault();
   const email = document.getElementById("user-email").value.trim();
-  if (!email) return alert("Įveskite el. paštą");
-  currentUser = email;
-  role = "user";
-  start();
-};
+  if (!email) {
+    showToast("error", "Klaida", "Įveskite el. paštą");
+    return;
+  }
+  currentUser = { email };
+  currentRole = "user";
+  initApp();
+});
 
-document.getElementById("login-org").onclick = () => {
+document.getElementById("org-login-form").addEventListener("submit", e => {
+  e.preventDefault();
   const code = document.getElementById("org-code").value.trim();
-  if (!code.startsWith("ORG")) return alert("Neteisingas organizacijos kodas");
-  role = "org";
-  start();
-};
+  if (!code.startsWith("ORG")) {
+    showToast("error", "Klaida", "Neteisingas organizacijos kodas");
+    return;
+  }
+  currentRole = "org";
+  initApp();
+});
 
-// START
+/* ---------- INIT ---------- */
 
-function start() {
-  document.getElementById("login-section").style.display = "none";
-  document.getElementById("activities-section").style.display = "block";
-  document.getElementById("org-panel").style.display =
-    role === "org" ? "block" : "none";
+function initApp() {
+  document.getElementById("auth-section").classList.add("is-hidden");
+  document.getElementById("dashboard").classList.remove("is-hidden");
   renderActivities();
 }
 
-// CREATE ACTIVITY
-
-document.getElementById("create-activity").onclick = () => {
-  const title = document.getElementById("activity-title").value;
-  const limit = Number(document.getElementById("activity-limit").value);
-
-  if (!title || !limit) return alert("Užpildykite visus laukus");
-
-  activities.push({
-    id: Date.now(),
-    title,
-    limit,
-    registrations: []
-  });
-
-  save();
-  renderActivities();
-};
-
-// REGISTER FLOW
+/* ---------- REGISTER MODAL ---------- */
 
 function openRegisterModal(activity) {
   selectedActivity = activity;
   document.getElementById("reg-date").value = "";
   document.getElementById("reg-time").value = "";
-  document.getElementById("register-modal").classList.remove("hidden");
+  document.getElementById("register-modal").classList.remove("is-hidden");
 }
 
 document.getElementById("cancel-register").onclick = () => {
-  document.getElementById("register-modal").classList.add("hidden");
+  document.getElementById("register-modal").classList.add("is-hidden");
   selectedActivity = null;
 };
 
@@ -69,73 +56,66 @@ document.getElementById("confirm-register").onclick = () => {
   const time = document.getElementById("reg-time").value;
 
   if (!date || !time) {
-    alert("Pasirinkite datą ir laiką");
+    showToast("error", "Klaida", "Pasirinkite datą ir laiką");
     return;
   }
 
-  if (selectedActivity.registrations.length >= selectedActivity.limit) {
-    alert("Dalyvių limitas pasiektas");
+  if (selectedActivity.registrations.length >= selectedActivity.maxParticipants) {
+    showToast("error", "Pilna", "Vietų nebėra");
     return;
   }
 
   selectedActivity.registrations.push({
-    email: currentUser,
+    email: currentUser.email,
     date,
     time
   });
 
-  save();
+  saveActivities();
   renderActivities();
-  document.getElementById("register-modal").classList.add("hidden");
+
+  document.getElementById("register-modal").classList.add("is-hidden");
+
+  showToast("success", "Registracija sėkminga", "Jūs užsiregistravote į veiklą");
 };
 
-// RENDER
+/* ---------- RENDER ---------- */
 
 function renderActivities() {
-  const container = document.getElementById("activities");
-  container.innerHTML = "";
+  const list = document.getElementById("activity-list");
+  list.innerHTML = "";
 
   activities.forEach(activity => {
-    const div = document.createElement("div");
-    div.className = "activity";
+    const card = document.createElement("div");
+    card.className = "activity-card";
 
-    div.innerHTML = `
-      <div class="activity-header">
-        <h3>${activity.title}</h3>
-        <strong>${activity.registrations.length} / ${activity.limit}</strong>
-      </div>
+    card.innerHTML = `
+      <h3>${activity.title}</h3>
+      <p>${activity.registrations.length} / ${activity.maxParticipants}</p>
     `;
 
-    if (role === "user") {
+    if (currentRole === "user") {
       const btn = document.createElement("button");
+      btn.className = "btn primary";
       btn.textContent = "Registruotis";
       btn.onclick = () => openRegisterModal(activity);
-      div.appendChild(btn);
+      card.appendChild(btn);
     }
 
-    if (role === "org") {
-      const ul = document.createElement("ul");
-
-      if (activity.registrations.length === 0) {
+    if (currentRole === "org") {
+      activity.registrations.forEach(r => {
         const p = document.createElement("p");
-        p.textContent = "Kol kas nėra registracijų";
-        div.appendChild(p);
-      } else {
-        activity.registrations.forEach(r => {
-          const li = document.createElement("li");
-          li.textContent = `${r.email} – ${r.date} ${r.time}`;
-          ul.appendChild(li);
-        });
-        div.appendChild(ul);
-      }
+        p.textContent = `${r.email} – ${r.date} ${r.time}`;
+        card.appendChild(p);
+      });
     }
 
-    container.appendChild(div);
+    list.appendChild(card);
   });
 }
 
-// SAVE
+/* ---------- STORAGE ---------- */
 
-function save() {
+function saveActivities() {
   localStorage.setItem("activities", JSON.stringify(activities));
 }
