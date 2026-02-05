@@ -1,12 +1,13 @@
 let currentUser = null;
 let role = null;
+let selectedActivity = null;
 
 const activities = JSON.parse(localStorage.getItem("activities")) || [];
 
 // LOGIN
 
 document.getElementById("login-user").onclick = () => {
-  const email = document.getElementById("user-email").value;
+  const email = document.getElementById("user-email").value.trim();
   if (!email) return alert("Įveskite el. paštą");
   currentUser = email;
   role = "user";
@@ -14,18 +15,19 @@ document.getElementById("login-user").onclick = () => {
 };
 
 document.getElementById("login-org").onclick = () => {
-  const code = document.getElementById("org-code").value;
-  if (!code.startsWith("ORG")) return alert("Neteisingas kodas");
+  const code = document.getElementById("org-code").value.trim();
+  if (!code.startsWith("ORG")) return alert("Neteisingas organizacijos kodas");
   role = "org";
   start();
 };
 
-// START APP
+// START
 
 function start() {
   document.getElementById("login-section").style.display = "none";
   document.getElementById("activities-section").style.display = "block";
-  document.getElementById("org-panel").style.display = role === "org" ? "block" : "none";
+  document.getElementById("org-panel").style.display =
+    role === "org" ? "block" : "none";
   renderActivities();
 }
 
@@ -48,29 +50,44 @@ document.getElementById("create-activity").onclick = () => {
   renderActivities();
 };
 
-// REGISTER
+// REGISTER FLOW
 
-function register(activity) {
-  if (activity.registrations.length >= activity.limit) {
+function openRegisterModal(activity) {
+  selectedActivity = activity;
+  document.getElementById("reg-date").value = "";
+  document.getElementById("reg-time").value = "";
+  document.getElementById("register-modal").classList.remove("hidden");
+}
+
+document.getElementById("cancel-register").onclick = () => {
+  document.getElementById("register-modal").classList.add("hidden");
+  selectedActivity = null;
+};
+
+document.getElementById("confirm-register").onclick = () => {
+  const date = document.getElementById("reg-date").value;
+  const time = document.getElementById("reg-time").value;
+
+  if (!date || !time) {
+    alert("Pasirinkite datą ir laiką");
+    return;
+  }
+
+  if (selectedActivity.registrations.length >= selectedActivity.limit) {
     alert("Dalyvių limitas pasiektas");
     return;
   }
 
-  const day = prompt("Kurią dieną dalyvausite? (YYYY-MM-DD)");
-  if (!day) return;
-
-  const time = prompt("Kelintą valandą? (HH:MM)");
-  if (!time) return;
-
-  activity.registrations.push({
+  selectedActivity.registrations.push({
     email: currentUser,
-    day,
+    date,
     time
   });
 
   save();
   renderActivities();
-}
+  document.getElementById("register-modal").classList.add("hidden");
+};
 
 // RENDER
 
@@ -92,27 +109,23 @@ function renderActivities() {
     if (role === "user") {
       const btn = document.createElement("button");
       btn.textContent = "Registruotis";
-      btn.onclick = () => register(activity);
+      btn.onclick = () => openRegisterModal(activity);
       div.appendChild(btn);
     }
 
     if (role === "org") {
-      const listTitle = document.createElement("h4");
-      listTitle.textContent = "Prisiregistravę dalyviai:";
-      div.appendChild(listTitle);
-
       const ul = document.createElement("ul");
-      activity.registrations.forEach(r => {
-        const li = document.createElement("li");
-        li.textContent = `${r.email} – ${r.day} ${r.time}`;
-        ul.appendChild(li);
-      });
 
       if (activity.registrations.length === 0) {
-        const empty = document.createElement("p");
-        empty.textContent = "Kol kas niekas neužsiregistravo";
-        div.appendChild(empty);
+        const p = document.createElement("p");
+        p.textContent = "Kol kas nėra registracijų";
+        div.appendChild(p);
       } else {
+        activity.registrations.forEach(r => {
+          const li = document.createElement("li");
+          li.textContent = `${r.email} – ${r.date} ${r.time}`;
+          ul.appendChild(li);
+        });
         div.appendChild(ul);
       }
     }
@@ -120,6 +133,8 @@ function renderActivities() {
     container.appendChild(div);
   });
 }
+
+// SAVE
 
 function save() {
   localStorage.setItem("activities", JSON.stringify(activities));
