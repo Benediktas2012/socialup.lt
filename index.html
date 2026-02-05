@@ -1,222 +1,309 @@
 <!DOCTYPE html>
-<html lang="lt">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SocialUp</title>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Flux Activities – MVP</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- SECTION: App Shell -->
+    <div class="app">
+      <!-- Global notification container -->
+      <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
-<div class="container">
+      <!-- SECTION: Header / Nav -->
+      <header class="app-header">
+        <div class="brand">
+          <span class="brand-mark"></span>
+          <div class="brand-copy">
+            <h1 class="brand-title">Flux Activities</h1>
+            <p class="brand-subtitle">Activity registration MVP</p>
+          </div>
+        </div>
 
-<!-- LOGIN -->
-<div id="loginSection">
-  <h1>Prisijungimas</h1>
-  <input id="loginInput" placeholder="Gmail arba ORG-123">
-  <button onclick="login()">Prisijungti</button>
-</div>
+        <div class="session" id="session-info">
+          <!-- Populated by JS (role, email/code, logout button) -->
+        </div>
+      </header>
 
-<!-- VEIKLOS -->
-<div id="activitiesSection" style="display:none;">
-  <h1>Socialinės veiklos</h1>
+      <!-- SECTION: Auth Tabs -->
+      <main class="app-main">
+        <section class="auth" id="auth-section">
+          <div class="auth-card">
+            <div class="auth-toggle" role="tablist" aria-label="Authentication type">
+              <button
+                class="auth-toggle-btn is-active"
+                id="user-tab"
+                data-role="user"
+                role="tab"
+                aria-selected="true"
+              >
+                User
+              </button>
+              <button
+                class="auth-toggle-btn"
+                id="org-tab"
+                data-role="org"
+                role="tab"
+                aria-selected="false"
+              >
+                Organization
+              </button>
+            </div>
 
-  <!-- ORGANIZACIJAI -->
-  <div id="orgPanel" style="display:none;">
-    <h2>Pridėti / redaguoti veiklą</h2>
-    <input id="title" placeholder="Veiklos pavadinimas">
-    <input id="dateFrom" type="date">
-    <input id="dateTo" type="date">
-    <input id="timeFrom" type="time">
-    <input id="timeTo" type="time">
-    <input id="age" type="number" placeholder="Nuo kelių metų">
-    <textarea id="description" placeholder="Aprašymas"></textarea>
-    <input id="locationInput" placeholder="Google Maps nuoroda">
-    <button id="saveBtn">Išsaugoti veiklą</button>
-  </div>
+            <!-- User login form -->
+            <form id="user-login-form" class="auth-form" novalidate>
+              <h2 class="auth-title">Sign in as participant</h2>
+              <p class="auth-description">
+                Join activities hosted by organizations. No password – we keep this MVP
+                frictionless.
+              </p>
+              <div class="field">
+                <label for="user-email">Email</label>
+                <input
+                  type="email"
+                  id="user-email"
+                  name="email"
+                  placeholder="you@example.com"
+                  required
+                />
+                <p class="field-error" data-error-for="user-email"></p>
+              </div>
+              <button type="submit" class="btn primary full">Continue as user</button>
+            </form>
 
-  <div class="activities" id="activitiesContainer"></div>
-  <button class="logout" onclick="logout()">Atsijungti</button>
-</div>
+            <!-- Org login form -->
+            <form id="org-login-form" class="auth-form is-hidden" novalidate>
+              <h2 class="auth-title">Sign in as organization</h2>
+              <p class="auth-description">
+                Use your organization access code to manage activities.
+              </p>
+              <div class="field">
+                <label for="org-code">Organization code</label>
+                <input
+                  type="text"
+                  id="org-code"
+                  name="code"
+                  placeholder="ORG-123"
+                  required
+                />
+                <p class="field-error" data-error-for="org-code"></p>
+              </div>
+              <button type="submit" class="btn primary full">Continue as org</button>
+              <p class="helper-text">Hint for demo: try codes like ORG-123 or ORG-DEMO.</p>
+            </form>
+          </div>
+        </section>
 
-<!-- APIE MANE -->
-<div class="about-me">
-  <img src="apie-mane.jpg">
-  <div>
-    <h2>Apie mane</h2>
-    <p><b>Sveiki, aš Benediktas.</b></p>
-    <p>
-      Tai mano mokyklos projektas, skirtas skatinti jaunimo savanorystę
-      ir padėti organizacijoms rasti dalyvius.
-    </p>
-  </div>
-</div>
+        <!-- SECTION: Dashboard wrapper (hidden until authenticated) -->
+        <section id="dashboard" class="dashboard is-hidden">
+          <!-- Left: org tools when org is logged in -->
+          <aside class="panel" id="org-panel">
+            <h2 class="panel-title">Organization tools</h2>
+            <p class="panel-description">
+              Create and manage activities. Changes are stored in your browser only.
+            </p>
 
-</div>
+            <!-- Activity form -->
+            <form id="activity-form" class="activity-form" novalidate>
+              <input type="hidden" id="activity-id" />
 
-<script>
-let editId = null;
+              <div class="field-group">
+                <div class="field">
+                  <label for="activity-title">Title</label>
+                  <input
+                    type="text"
+                    id="activity-title"
+                    name="title"
+                    placeholder="Yoga in the Park"
+                    required
+                  />
+                  <p class="field-error" data-error-for="activity-title"></p>
+                </div>
+                <div class="field">
+                  <label for="activity-location">Location</label>
+                  <input
+                    type="text"
+                    id="activity-location"
+                    name="location"
+                    placeholder="Downtown Studio"
+                    required
+                  />
+                  <p class="field-error" data-error-for="activity-location"></p>
+                </div>
+              </div>
 
-/* LOGIN */
-function login(){
-  const val = loginInput.value.trim();
-  if(!val) return alert("Įveskite gmail arba ORG kodą");
+              <div class="field-group">
+                <div class="field">
+                  <label for="date-from">Start date</label>
+                  <input type="date" id="date-from" name="dateFrom" required />
+                  <p class="field-error" data-error-for="date-from"></p>
+                </div>
+                <div class="field">
+                  <label for="date-to">End date</label>
+                  <input type="date" id="date-to" name="dateTo" required />
+                  <p class="field-error" data-error-for="date-to"></p>
+                </div>
+              </div>
 
-  let orgs = JSON.parse(localStorage.getItem("orgs")) || {};
+              <div class="field-group">
+                <div class="field">
+                  <label for="time-from">Start time</label>
+                  <input type="time" id="time-from" name="timeFrom" required />
+                  <p class="field-error" data-error-for="time-from"></p>
+                </div>
+                <div class="field">
+                  <label for="time-to">End time</label>
+                  <input type="time" id="time-to" name="timeTo" required />
+                  <p class="field-error" data-error-for="time-to"></p>
+                </div>
+              </div>
 
-  if(val.startsWith("ORG-")){
-    if(!orgs[val]){
-      const name = prompt("Organizacijos pavadinimas:");
-      if(!name) return;
-      orgs[val] = { name, activities: [] };
-      localStorage.setItem("orgs", JSON.stringify(orgs));
-    }
-    localStorage.setItem("role","org");
-    localStorage.setItem("orgCode",val);
-  } else {
-    if(!val.includes("@")) return alert("Įveskite galiojantį gmail");
-    localStorage.setItem("role","user");
-    localStorage.setItem("userEmail",val);
-  }
+              <div class="field-group">
+                <div class="field">
+                  <label for="min-age">Minimum age</label>
+                  <input
+                    type="number"
+                    id="min-age"
+                    name="minAge"
+                    min="0"
+                    max="120"
+                    required
+                  />
+                  <p class="field-error" data-error-for="min-age"></p>
+                </div>
+                <div class="field">
+                  <label for="max-participants">Max participants</label>
+                  <input
+                    type="number"
+                    id="max-participants"
+                    name="maxParticipants"
+                    min="1"
+                    max="5000"
+                    required
+                  />
+                  <p class="field-error" data-error-for="max-participants"></p>
+                </div>
+              </div>
 
-  location.reload();
-}
+              <div class="field">
+                <label for="activity-description">Description</label>
+                <textarea
+                  id="activity-description"
+                  name="description"
+                  rows="3"
+                  placeholder="Short description to help users understand what to expect."
+                ></textarea>
+                <p class="field-error" data-error-for="activity-description"></p>
+              </div>
 
-function logout(){
-  localStorage.removeItem("role");
-  localStorage.removeItem("orgCode");
-  localStorage.removeItem("userEmail");
-  location.reload();
-}
+              <div class="form-actions">
+                <button type="submit" class="btn primary" id="activity-save-btn">
+                  Create activity
+                </button>
+                <button type="button" class="btn subtle" id="activity-reset-btn">
+                  Reset
+                </button>
+              </div>
+            </form>
 
-function getOrgs(){
-  return JSON.parse(localStorage.getItem("orgs")) || {};
-}
+            <div class="panel-meta">
+              <h3>At a glance</h3>
+              <p><span id="activity-count">0</span> activities live</p>
+            </div>
+          </aside>
 
-function saveOrgs(orgs){
-  localStorage.setItem("orgs", JSON.stringify(orgs));
-}
+          <!-- Right: activity feed / user view -->
+          <section class="content" id="activity-section">
+            <header class="content-header">
+              <div>
+                <h2 class="content-title">Activities</h2>
+                <p class="content-subtitle" id="content-subtitle">
+                  Sign in to browse and register.
+                </p>
+              </div>
+              <div class="content-filters">
+                <label class="chip">
+                  <input type="checkbox" id="filter-mine" />
+                  <span>My registrations</span>
+                </label>
+              </div>
+            </header>
 
-/* SAVE / EDIT */
-saveBtn.onclick = () => {
-  const orgCode = localStorage.getItem("orgCode");
-  const orgs = getOrgs();
-  const org = orgs[orgCode];
+            <div id="empty-state" class="empty-state">
+              <h3>No activities yet</h3>
+              <p>
+                When organizations create activities, they will appear here for users to
+                discover and join.
+              </p>
+            </div>
 
-  if(!title.value || !dateFrom.value || !dateTo.value) {
-    return alert("Užpildyk visus laukus");
-  }
+            <div id="activity-list" class="activity-grid" aria-live="polite"></div>
+          </section>
+        </section>
 
-  if(editId){
-    const a = org.activities.find(a=>a.id===editId);
-    Object.assign(a,{
-      title:title.value,
-      dateFrom:dateFrom.value,
-      dateTo:dateTo.value,
-      timeFrom:timeFrom.value,
-      timeTo:timeTo.value,
-      age:age.value,
-      description:description.value,
-      location:locationInput.value
-    });
-    editId=null;
-    saveBtn.textContent="Išsaugoti veiklą";
-  } else {
-    org.activities.push({
-      id:Date.now(),
-      title:title.value,
-      dateFrom:dateFrom.value,
-      dateTo:dateTo.value,
-      timeFrom:timeFrom.value,
-      timeTo:timeTo.value,
-      age:age.value,
-      description:description.value,
-      location:locationInput.value,
-      registered:[]
-    });
-  }
+        <!-- SECTION: Registration modal -->
+        <div class="modal-backdrop is-hidden" id="registration-modal-backdrop">
+          <div
+            class="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="registration-modal-title"
+          >
+            <div class="modal-header">
+              <h2 id="registration-modal-title">Register for activity</h2>
+              <button
+                class="icon-btn"
+                id="registration-modal-close"
+                aria-label="Close registration dialog"
+              >
+                ✕
+              </button>
+            </div>
+            <div class="modal-body">
+              <p id="registration-activity-summary" class="modal-summary"></p>
+              <form id="registration-form" novalidate>
+                <input type="hidden" id="registration-activity-id" />
 
-  saveOrgs(orgs);
-  clearForm();
-  render();
-};
+                <div class="field">
+                  <label for="registration-date">Choose day</label>
+                  <input type="date" id="registration-date" required />
+                  <p class="field-error" data-error-for="registration-date"></p>
+                </div>
 
-function clearForm(){
-  title.value=dateFrom.value=dateTo.value=timeFrom.value=timeTo.value=age.value=description.value=locationInput.value="";
-}
+                <div class="field">
+                  <label for="registration-time">Choose time</label>
+                  <input type="time" id="registration-time" required />
+                  <p class="field-error" data-error-for="registration-time"></p>
+                </div>
 
-/* EDIT / DELETE */
-function editActivity(id){
-  const org = getOrgs()[localStorage.getItem("orgCode")];
-  const a = org.activities.find(a=>a.id===id);
-  title.value=a.title;
-  dateFrom.value=a.dateFrom;
-  dateTo.value=a.dateTo;
-  timeFrom.value=a.timeFrom;
-  timeTo.value=a.timeTo;
-  age.value=a.age;
-  description.value=a.description;
-  locationInput.value=a.location;
-  editId=id;
-  saveBtn.textContent="Išsaugoti pakeitimus";
-}
+                <div class="form-actions">
+                  <button type="submit" class="btn primary">Confirm registration</button>
+                  <button type="button" class="btn subtle" id="registration-cancel-btn">
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </main>
 
-function deleteActivity(id){
-  if(!confirm("Ištrinti veiklą?")) return;
-  const orgs = getOrgs();
-  const org = orgs[localStorage.getItem("orgCode")];
-  org.activities = org.activities.filter(a=>a.id!==id);
-  saveOrgs(orgs);
-  render();
-}
+      <footer class="app-footer">
+        <p>
+          Local-only MVP – data stored in your browser via localStorage. Clear storage to
+          reset.
+        </p>
+      </footer>
+    </div>
 
-/* REGISTRATION */
-function register(orgCode,id){
-  const email = localStorage.getItem("userEmail");
-  const day = prompt("Kurią dieną ateisi?");
-  const time = prompt("Kurią valandą?");
-  if(!day || !time) return;
-
-  const orgs = getOrgs();
-  orgs[orgCode].activities
-    .find(a=>a.id===id)
-    .registered.push({email,day,time});
-
-  saveOrgs(orgs);
-  render();
-}
-
-/* RENDER */
-function render(){
-  activitiesContainer.innerHTML="";
-  const role = localStorage.getItem("role");
-  orgPanel.style.display = role==="org"?"block":"none";
-
-  Object.entries(getOrgs()).forEach(([code,org])=>{
-    org.activities.forEach(a=>{
-      activitiesContainer.innerHTML+=`
-      <div class="card">
-        <h3>${a.title}</h3>
-        <p><b>🏢 ${org.name}</b></p>
-        <p>📆 ${a.dateFrom} – ${a.dateTo}</p>
-        <p>⏰ ${a.timeFrom} – ${a.timeTo}</p>
-        <p>${a.description}</p>
-        <p>👥 ${a.registered.map(r=>`${r.email} (${r.day} ${r.time})`).join("<br>")}</p>
-        ${role==="user"?`<button onclick="register('${code}',${a.id})">Registruotis</button>`:""}
-        ${role==="org" && localStorage.getItem("orgCode")===code?
-          `<button class="edit-btn" onclick="editActivity(${a.id})">✏️</button>
-           <button class="delete-btn" onclick="deleteActivity(${a.id})">🗑️</button>`:""}
-      </div>`;
-    });
-  });
-}
-
-if(localStorage.getItem("role")){
-  loginSection.style.display="none";
-  activitiesSection.style.display="block";
-  render();
-}
-</script>
-
-</body>
+    <script src="script.js"></script>
+  </body>
 </html>
