@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="lt">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flux Activities – MVP</title>
+    <title>Flux veiklos – MVP</title>
     <link rel="stylesheet" href="style.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,294 +13,171 @@
     />
   </head>
   <body>
-    <!-- SECTION: App Shell -->
     <div class="app">
-      <!-- Global notification container -->
+      <!-- Pranešimų konteineris -->
       <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
-      <!-- SECTION: Header / Nav -->
+      <!-- Antraštė -->
       <header class="app-header">
         <div class="brand">
           <span class="brand-mark"></span>
           <div class="brand-copy">
-            <h1 class="brand-title">Flux Activities</h1>
-            <p class="brand-subtitle">Activity registration MVP</p>
+            <h1 class="brand-title">Flux veiklos</h1>
+            <p class="brand-subtitle">Veiklų registracijos MVP</p>
           </div>
         </div>
 
-        <div class="session" id="session-info">
-          <!-- Populated by JS (role, email/code, logout button) -->
-        </div>
+        <div class="session" id="session-info"></div>
       </header>
 
-      <!-- SECTION: Auth Tabs -->
       <main class="app-main">
+        <!-- Autentifikacija -->
         <section class="auth" id="auth-section">
           <div class="auth-card">
-            <div class="auth-toggle" role="tablist" aria-label="Authentication type">
-              <button
-                class="auth-toggle-btn is-active"
-                id="user-tab"
-                data-role="user"
-                role="tab"
-                aria-selected="true"
-              >
-                User
+            <div class="auth-toggle" role="tablist">
+              <button class="auth-toggle-btn is-active" id="user-tab" data-role="user">
+                Dalyvis
               </button>
-              <button
-                class="auth-toggle-btn"
-                id="org-tab"
-                data-role="org"
-                role="tab"
-                aria-selected="false"
-              >
-                Organization
+              <button class="auth-toggle-btn" id="org-tab" data-role="org">
+                Organizacija
               </button>
             </div>
 
-            <!-- User login form -->
+            <!-- Dalyvio prisijungimas -->
             <form id="user-login-form" class="auth-form" novalidate>
-              <h2 class="auth-title">Sign in as participant</h2>
+              <h2 class="auth-title">Prisijungimas dalyviui</h2>
               <p class="auth-description">
-                Join activities hosted by organizations. No password – we keep this MVP
-                frictionless.
+                Prisijunk prie organizacijų rengiamų veiklų. Be slaptažodžio – greita ir paprasta.
               </p>
               <div class="field">
-                <label for="user-email">Email</label>
-                <input
-                  type="email"
-                  id="user-email"
-                  name="email"
-                  placeholder="you@example.com"
-                  required
-                />
+                <label for="user-email">El. paštas</label>
+                <input type="email" id="user-email" placeholder="tu@example.com" required />
                 <p class="field-error" data-error-for="user-email"></p>
               </div>
-              <button type="submit" class="btn primary full">Continue as user</button>
+              <button type="submit" class="btn primary full">Tęsti kaip dalyvis</button>
             </form>
 
-            <!-- Org login form -->
+            <!-- Organizacijos prisijungimas -->
             <form id="org-login-form" class="auth-form is-hidden" novalidate>
-              <h2 class="auth-title">Sign in as organization</h2>
+              <h2 class="auth-title">Prisijungimas organizacijai</h2>
               <p class="auth-description">
-                Use your organization access code to manage activities.
+                Naudok organizacijos kodą veiklų valdymui.
               </p>
               <div class="field">
-                <label for="org-code">Organization code</label>
-                <input
-                  type="text"
-                  id="org-code"
-                  name="code"
-                  placeholder="ORG-123"
-                  required
-                />
+                <label for="org-code">Organizacijos kodas</label>
+                <input type="text" id="org-code" placeholder="ORG-123" required />
                 <p class="field-error" data-error-for="org-code"></p>
               </div>
-              <button type="submit" class="btn primary full">Continue as org</button>
-              <p class="helper-text">Hint for demo: try codes like ORG-123 or ORG-DEMO.</p>
+              <button type="submit" class="btn primary full">Tęsti kaip organizacija</button>
+              <p class="helper-text">Demo: ORG-123 arba ORG-DEMO</p>
             </form>
           </div>
         </section>
 
-        <!-- SECTION: Dashboard wrapper (hidden until authenticated) -->
+        <!-- Dashboard -->
         <section id="dashboard" class="dashboard is-hidden">
-          <!-- Left: org tools when org is logged in -->
           <aside class="panel" id="org-panel">
-            <h2 class="panel-title">Organization tools</h2>
+            <h2 class="panel-title">Organizacijos įrankiai</h2>
             <p class="panel-description">
-              Create and manage activities. Changes are stored in your browser only.
+              Kurk ir valdyk veiklas. Duomenys saugomi tik šiame naršyklės lange.
             </p>
 
-            <!-- Activity form -->
             <form id="activity-form" class="activity-form" novalidate>
               <input type="hidden" id="activity-id" />
 
               <div class="field-group">
                 <div class="field">
-                  <label for="activity-title">Title</label>
-                  <input
-                    type="text"
-                    id="activity-title"
-                    name="title"
-                    placeholder="Yoga in the Park"
-                    required
-                  />
+                  <label for="activity-title">Pavadinimas</label>
+                  <input id="activity-title" required />
                   <p class="field-error" data-error-for="activity-title"></p>
                 </div>
                 <div class="field">
-                  <label for="activity-location">Location</label>
-                  <input
-                    type="text"
-                    id="activity-location"
-                    name="location"
-                    placeholder="Downtown Studio"
-                    required
-                  />
+                  <label for="activity-location">Vieta</label>
+                  <input id="activity-location" required />
                   <p class="field-error" data-error-for="activity-location"></p>
                 </div>
               </div>
 
               <div class="field-group">
                 <div class="field">
-                  <label for="date-from">Start date</label>
-                  <input type="date" id="date-from" name="dateFrom" required />
+                  <label for="date-from">Pradžios data</label>
+                  <input type="date" id="date-from" required />
                   <p class="field-error" data-error-for="date-from"></p>
                 </div>
                 <div class="field">
-                  <label for="date-to">End date</label>
-                  <input type="date" id="date-to" name="dateTo" required />
+                  <label for="date-to">Pabaigos data</label>
+                  <input type="date" id="date-to" required />
                   <p class="field-error" data-error-for="date-to"></p>
                 </div>
               </div>
 
               <div class="field-group">
                 <div class="field">
-                  <label for="time-from">Start time</label>
-                  <input type="time" id="time-from" name="timeFrom" required />
+                  <label for="time-from">Pradžios laikas</label>
+                  <input type="time" id="time-from" required />
                   <p class="field-error" data-error-for="time-from"></p>
                 </div>
                 <div class="field">
-                  <label for="time-to">End time</label>
-                  <input type="time" id="time-to" name="timeTo" required />
+                  <label for="time-to">Pabaigos laikas</label>
+                  <input type="time" id="time-to" required />
                   <p class="field-error" data-error-for="time-to"></p>
                 </div>
               </div>
 
               <div class="field-group">
                 <div class="field">
-                  <label for="min-age">Minimum age</label>
-                  <input
-                    type="number"
-                    id="min-age"
-                    name="minAge"
-                    min="0"
-                    max="120"
-                    required
-                  />
+                  <label for="min-age">Minimalus amžius</label>
+                  <input type="number" id="min-age" required />
                   <p class="field-error" data-error-for="min-age"></p>
                 </div>
                 <div class="field">
-                  <label for="max-participants">Max participants</label>
-                  <input
-                    type="number"
-                    id="max-participants"
-                    name="maxParticipants"
-                    min="1"
-                    max="5000"
-                    required
-                  />
+                  <label for="max-participants">Dalyvių limitas</label>
+                  <input type="number" id="max-participants" required />
                   <p class="field-error" data-error-for="max-participants"></p>
                 </div>
               </div>
 
               <div class="field">
-                <label for="activity-description">Description</label>
-                <textarea
-                  id="activity-description"
-                  name="description"
-                  rows="3"
-                  placeholder="Short description to help users understand what to expect."
-                ></textarea>
-                <p class="field-error" data-error-for="activity-description"></p>
+                <label for="activity-description">Aprašymas</label>
+                <textarea id="activity-description" rows="3"></textarea>
               </div>
 
               <div class="form-actions">
-                <button type="submit" class="btn primary" id="activity-save-btn">
-                  Create activity
-                </button>
-                <button type="button" class="btn subtle" id="activity-reset-btn">
-                  Reset
-                </button>
+                <button class="btn primary" id="activity-save-btn">Sukurti veiklą</button>
+                <button type="button" class="btn subtle" id="activity-reset-btn">Išvalyti</button>
               </div>
             </form>
 
             <div class="panel-meta">
-              <h3>At a glance</h3>
-              <p><span id="activity-count">0</span> activities live</p>
+              <h3>Santrauka</h3>
+              <p><span id="activity-count">0</span> aktyvių veiklų</p>
             </div>
           </aside>
 
-          <!-- Right: activity feed / user view -->
           <section class="content" id="activity-section">
             <header class="content-header">
               <div>
-                <h2 class="content-title">Activities</h2>
-                <p class="content-subtitle" id="content-subtitle">
-                  Sign in to browse and register.
-                </p>
+                <h2 class="content-title">Veiklos</h2>
+                <p class="content-subtitle" id="content-subtitle"></p>
               </div>
-              <div class="content-filters">
-                <label class="chip">
-                  <input type="checkbox" id="filter-mine" />
-                  <span>My registrations</span>
-                </label>
-              </div>
+              <label class="chip">
+                <input type="checkbox" id="filter-mine" />
+                <span>Mano registracijos</span>
+              </label>
             </header>
 
             <div id="empty-state" class="empty-state">
-              <h3>No activities yet</h3>
-              <p>
-                When organizations create activities, they will appear here for users to
-                discover and join.
-              </p>
+              <h3>Kol kas nėra veiklų</h3>
+              <p>Organizacijoms sukūrus veiklas, jos pasirodys čia.</p>
             </div>
 
-            <div id="activity-list" class="activity-grid" aria-live="polite"></div>
+            <div id="activity-list" class="activity-grid"></div>
           </section>
         </section>
-
-        <!-- SECTION: Registration modal -->
-        <div class="modal-backdrop is-hidden" id="registration-modal-backdrop">
-          <div
-            class="modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="registration-modal-title"
-          >
-            <div class="modal-header">
-              <h2 id="registration-modal-title">Register for activity</h2>
-              <button
-                class="icon-btn"
-                id="registration-modal-close"
-                aria-label="Close registration dialog"
-              >
-                ✕
-              </button>
-            </div>
-            <div class="modal-body">
-              <p id="registration-activity-summary" class="modal-summary"></p>
-              <form id="registration-form" novalidate>
-                <input type="hidden" id="registration-activity-id" />
-
-                <div class="field">
-                  <label for="registration-date">Choose day</label>
-                  <input type="date" id="registration-date" required />
-                  <p class="field-error" data-error-for="registration-date"></p>
-                </div>
-
-                <div class="field">
-                  <label for="registration-time">Choose time</label>
-                  <input type="time" id="registration-time" required />
-                  <p class="field-error" data-error-for="registration-time"></p>
-                </div>
-
-                <div class="form-actions">
-                  <button type="submit" class="btn primary">Confirm registration</button>
-                  <button type="button" class="btn subtle" id="registration-cancel-btn">
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
       </main>
 
       <footer class="app-footer">
-        <p>
-          Local-only MVP – data stored in your browser via localStorage. Clear storage to
-          reset.
-        </p>
+        <p>Duomenys saugomi tik naršyklėje (localStorage).</p>
       </footer>
     </div>
 
