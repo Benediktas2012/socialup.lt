@@ -1,300 +1,60 @@
 <!DOCTYPE html>
 <html lang="lt">
 <head>
-  <meta charset="UTF-8" />
-  <title>Socialinė savanorystės platforma</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SocialUp</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="header">
-    <div class="logo">Savanoriauk<span>.LT</span></div>
-    <nav class="nav">
-      <button class="nav-link" data-section="home-section">Pagrindinis</button>
-      <button class="nav-link" data-section="activities-section">Veiklos</button>
-      <button class="nav-link" data-section="about-section">Apie projektą</button>
-    </nav>
-    <div class="auth-area">
-      <span id="current-user-label"></span>
-      <button id="open-login-modal" class="btn btn-outline">Prisijungti</button>
-      <button id="logout-btn" class="btn btn-danger hidden">Atsijungti</button>
-    </div>
-  </header>
 
-  <main class="main">
-    <!-- HOME / HERO -->
-    <section id="home-section" class="section active">
-      <div class="hero">
-        <div class="hero-text">
-          <h1>Socialinė savanorystės platforma jaunimui</h1>
-          <p>
-            Atrask prasmingas veiklas, padėk bendruomenei ir kurk ryšį su
-            organizacijomis, kurioms rūpi socialinis poveikis.
-          </p>
-          <div class="hero-actions">
-            <button id="hero-join-btn" class="btn btn-primary">
-              Pradėti kaip savanoris
-            </button>
-            <button id="hero-org-btn" class="btn btn-secondary">
-              Prisijungti kaip organizacija
-            </button>
-          </div>
-          <p class="hero-note">
-            Platforma skirta demonstraciniams / portfolio tikslams. Visi duomenys
-            saugomi tik jūsų naršyklėje (localStorage).
-          </p>
-        </div>
-      </div>
-    </section>
+<div class="container">
 
-    <!-- ACTIVITIES / MAIN APP -->
-    <section id="activities-section" class="section">
-      <div class="section-header">
-        <h2>Savanorystės veiklos</h2>
-        <p id="role-hint" class="muted">
-          Prisijunkite, kad galėtumėte kurti veiklas (organizacija) arba
-          registruotis (savanoris).
-        </p>
-      </div>
+<!-- LOGIN -->
+<div id="loginSection">
+  <h1>Prisijungimas</h1>
+  <input id="loginInput" placeholder="Gmail arba ORG-123">
+  <button onclick="login()">Prisijungti</button>
+</div>
 
-      <div id="org-panel" class="panel hidden">
-        <div class="panel-header">
-          <h3>Organizacijos valdymo skydelis</h3>
-          <button id="toggle-activity-form" class="btn btn-outline">
-            + Nauja veikla
-          </button>
-        </div>
+<!-- VEIKLOS -->
+<div id="activitiesSection" style="display:none;">
+  <h1>Socialinės veiklos</h1>
 
-        <form id="activity-form" class="card form-card hidden">
-          <h4 id="activity-form-title">Sukurti naują veiklą</h4>
-          <input type="hidden" id="activity-id" />
-
-          <div class="form-group">
-            <label for="activity-title">Pavadinimas *</label>
-            <input type="text" id="activity-title" required />
-            <small class="error" id="activity-title-error"></small>
-          </div>
-
-          <div class="form-group">
-            <label for="activity-description">Aprašymas *</label>
-            <textarea id="activity-description" rows="3" required></textarea>
-            <small class="error" id="activity-description-error"></small>
-          </div>
-
-          <div class="form-group">
-            <label for="activity-location">Vieta (Google Maps nuoroda) *</label>
-            <input type="url" id="activity-location" placeholder="https://maps.google.com/..." required            <small class="error" id="activity-location-error"></small>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="activity-date-from">Data nuo *</label>
-              <input type="date" id="activity-date-from" required />
-              <small class="error" id="activity-date-from-error"></small>
-            </div>
-            <div class="form-group">
-              <label for="activity-date-to">Data iki *</label>
-              <input type="date" id="activity-date-to" required />
-              <small class="error" id="activity-date-to-error"></small>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="activity-time-from">Laikas nuo *</label>
-              <input type="time" id="activity-time-from" required />
-              <small class="error" id="activity-time-from-error"></small>
-            </div>
-            <div class="form-group">
-              <label for="activity-time-to">Laikas iki *</label>
-              <input type="time" id="activity-time-to" required />
-              <small class="error" id="activity-time-to-error"></small>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="activity-min-age">Minimalus amžius *</label>
-              <input type="number" id="activity-min-age" min="12" max="120" required />
-              <small class="error" id="activity-min-age-error"></small>
-            </div>
-            <div class="form-group">
-              <label for="activity-max-participants">Maks. dalyvių skaičius *</label>
-              <input type="number" id="activity-max-participants" min="1" required />
-              <small class="error" id="activity-max-participants-error"></small>
-            </div>
-          </div>
-
-          <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Išsaugoti veiklą</button>
-            <button type="button" id="cancel-activity-edit" class="btn btn-secondary">
-              Atšaukti
-            </button>
-          </div>
-          <small class="form-global-error error" id="activity-form-global-error"></small>
-        </form>
-
-        <div class="panel-subheader">
-          <h4>Mano veiklos</h4>
-        </div>
-        <div id="org-activities-list" class="cards-grid empty-state">
-          <p>Kol kas neturite sukurtų veiklų.</p>
-        </div>
-      </div>
-
-      <div id="user-panel" class="panel hidden">
-        <div class="panel-header">
-          <h3>Savanorio skydelis</h3>
-        </div>
-        <p class="muted">
-          Pasirinkite jus dominančią veiklą ir užsiregistruokite, nurodydami
-          atvykimo datą ir laiką.
-        </p>
-      </div>
-
-      <div class="panel">
-        <div class="panel-subheader">
-          <h4>Visos veiklos</h4>
-        </div>
-        <div id="all-activities-list" class="cards-grid empty-state">
-          <p>Dar nėra sukurtų veiklų.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ABOUT -->
-    <section id="about-section" class="section">
-      <div class="section-header">
-        <h2>Apie projektą</h2>
-      </div>
-      <div class="card about-card">
-        <p>
-          Ši platforma sukurta kaip <strong>pilnas front-end projektas</strong>,
-          skirtas parodyti autentifikacijos, vaidmenų valdymo, formų validacijos,
-          localStorage ir UI/UX įgūdžius.
-        </p>
-        <p>
-          Technologijos: <strong>HTML</strong>, <strong>CSS</strong>,
-          <strong>JavaScript</strong> (be frameworkų). Visi duomenys laikomi
-          naršyklėje naudojant <strong>localStorage</strong>.
-        </p>
-        <p>
-          Funkcionalumas apima:
-        </p>
-        <ul>
-          <li>Prisijungimą kaip savanoris (Gmail) arba organizacija (ORG-XXX)</li>
-          <li>Veiklų kūrimą, redagavimą ir trynimą (organizacijoms)</li>
-          <li>Savanorių registraciją į veiklas su datos ir laiko tikrinimu</li>
-          <li>Aiškius klaidų pranešimus ir patogų tamsų dizainą</li>
-        </ul>
-        <p class="muted">
-          „Apie mane“: čia galite įrašyti savo vardą, kontaktus ar nuorodas į
-          GitHub / LinkedIn, jei naudojate projektą kaip portfolio.
-        </p>
-      </div>
-    </section>
-  </main>
-
-  <!-- LOGIN MODAL -->
-  <div id="login-modal" class="modal hidden">
-    <div class="modal-backdrop"></div>
-    <div class="modal-content card">
-      <div class="modal-header">
-        <h3>Prisijungimas</h3>
-        <button id="close-login-modal" class="icon-btn" aria-label="Uždaryti">
-          ✕
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="tabs">
-          <button class="tab-btn active" data-tab="user-login-tab">
-            Savanoris
-          </button>
-          <button class="tab-btn" data-tab="org-login-tab">
-            Organizacija
-          </button>
-        </div>
-
-        <div id="user-login-tab" class="tab active">
-          <form id="user-login-form" class="form">
-            <div class="form-group">
-              <label for="user-email">Gmail adresas *</label>
-              <input
-                type="email"
-                id="user-email"
-                placeholder="vardas@gmail.com"
-                required
-              />
-              <small class="error" id="user-email-error"></small>
-            </div>
-            <button type="submit" class="btn btn-primary full-width">
-              Prisijungti kaip savanoris
-            </button>
-            <small class="form-global-error error" id="user-login-global-error"></small>
-          </form>
-        </div>
-
-        <div id="org-login-tab" class="tab">
-          <form id="org-login-form" class="form">
-            <div class="form-group">
-              <label for="org-code">Organizacijos kodas (ORG-XXX) *</label>
-              <input
-                type="text"
-                id="org-code"
-                placeholder="ORG-ABC"
-                required
-              />
-              <small class="error" id="org-code-error"></small>
-            </div>
-            <button type="submit" class="btn btn-primary full-width">
-              Prisijungti kaip organizacija
-            </button>
-            <small class="form-global-error error" id="org-login-global-error"></small>
-          </form>
-        </div>
-      </div>
-    </div>
+  <!-- ORGANIZACIJAI -->
+  <div id="orgPanel" style="display:none;">
+    <h2>Pridėti / redaguoti veiklą</h2>
+    <input id="title" placeholder="Veiklos pavadinimas">
+    <input id="dateFrom" type="date">
+    <input id="dateTo" type="date">
+    <input id="timeFrom" type="time">
+    <input id="timeTo" type="time">
+    <input id="age" type="number" placeholder="Nuo kelių metų">
+    <input id="maxParticipants" type="number" placeholder="Maks. dalyvių skaičius">
+    <textarea id="description" placeholder="Aprašymas"></textarea>
+    <input id="locationInput" placeholder="Google Maps nuoroda">
+    <button id="saveBtn">Išsaugoti veiklą</button>
   </div>
 
-  <!-- REGISTRATION MODAL -->
-  <div id="registration-modal" class="modal hidden">
-    <div class="modal-backdrop"></div>
-    <div class="modal-content card">
-      <div class="modal-header">
-        <h3>Registracija į veiklą</h3>
-        <button id="close-registration-modal" class="icon-btn" aria-label="Uždaryti">
-          ✕
-        </button>
-      </div>
-      <div class="modal-body">
-        <div id="registration-activity-summary" class="registration-summary"></div>
-        <form id="registration-form" class="form">
-          <input type="hidden" id="registration-activity-id" />
+  <div class="activities" id="activitiesContainer"></div>
+  <button class="logout" onclick="logout()">Atsijungti</button>
+</div>
 
-          <div class="form-group">
-            <label for="registration-date">Atvykimo data *</label>
-            <input type="date" id="registration-date" required />
-            <small class="error" id="registration-date-error"></small>
-          </div>
-
-          <div class="form-group">
-            <label for="registration-time">Atvykimo laikas *</label>
-            <input type="time" id="registration-time" required />
-            <small class="error" id="registration-time-error"></small>
-          </div>
-
-          <button type="submit" class="btn btn-primary full-width">
-            Patvirtinti registraciją
-          </button>
-          <small class="form-global-error error" id="registration-global-error"></small>
-        </form>
-      </div>
-    </div>
+<!-- APIE MANE -->
+<div class="about-me">
+  <img src="apie-mane.jpg">
+  <div>
+    <h2>Apie mane</h2>
+    <p><b>Sveiki, aš Benediktas.</b></p>
+    <p>
+      Tai mano mokyklos projektas, skirtas skatinti jaunimo savanorystę
+      ir padėti organizacijoms rasti dalyvius.
+    </p>
   </div>
+</div>
 
-  <!-- TOAST -->
-  <div id="toast" class="toast hidden"></div>
+</div>
 
-  <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
