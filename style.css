@@ -1,4 +1,4 @@
-/* ====== BASE STYLES ====== */
+/* SECTION: Design Tokens */
 
 :root {
   --bg-color: #0f172a;
@@ -22,6 +22,8 @@
   --transition-med: 0.2s ease-out;
 }
 
+/* SECTION: Base */
+
 *,
 *::before,
 *::after {
@@ -38,7 +40,7 @@ body {
   min-height: 100%;
 }
 
-/* ====== LAYOUT ====== */
+/* SECTION: Layout */
 
 .app-container {
   min-height: 100vh;
@@ -85,7 +87,7 @@ body {
   width: 100%;
 }
 
-/* ====== CARDS & LAYOUT ====== */
+/* SECTION: Cards & Grids */
 
 .card {
   background: radial-gradient(circle at top left, #111827 0, #020617 45%, #020617 100%);
@@ -133,7 +135,7 @@ body {
   align-items: flex-start;
 }
 
-/* ====== TABS ====== */
+/* SECTION: Tabs */
 
 .tabs {
   display: inline-flex;
@@ -152,7 +154,9 @@ body {
   padding: 7px 16px;
   border-radius: 999px;
   cursor: pointer;
-  transition: background var(--transition-med), color var(--transition-med),
+  transition:
+    background var(--transition-med),
+    color var(--transition-med),
     transform var(--transition-fast);
 }
 
@@ -163,7 +167,7 @@ body {
   box-shadow: 0 8px 18px rgba(37, 99, 235, 0.55);
 }
 
-/* ====== FORMS ====== */
+/* SECTION: Forms */
 
 .form {
   display: none;
@@ -204,8 +208,11 @@ textarea {
   color: var(--text-main);
   font-size: 0.9rem;
   outline: none;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast),
-    background var(--transition-fast), transform var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 input::placeholder,
@@ -216,7 +223,9 @@ textarea::placeholder {
 input:focus,
 textarea:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.8), 0 0 0 6px rgba(37, 99, 235, 0.25);
+  box-shadow:
+    0 0 0 1px rgba(59, 130, 246, 0.8),
+    0 0 0 6px rgba(37, 99, 235, 0.25);
   background: #020617;
   transform: translateY(-1px);
 }
@@ -239,7 +248,7 @@ textarea {
   margin-top: 8px;
 }
 
-/* ====== BUTTONS ====== */
+/* SECTION: Buttons */
 
 .btn {
   border-radius: 999px;
@@ -251,8 +260,12 @@ textarea {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  transition: background var(--transition-med), box-shadow var(--transition-med),
-    transform var(--transition-fast), color var(--transition-med), border-color var(--transition-med);
+  transition:
+    background var(--transition-med),
+    box-shadow var(--transition-med),
+    transform var(--transition-fast),
+    color var(--transition-med),
+    border-color var(--transition-med);
   white-space: nowrap;
 }
 
@@ -311,7 +324,7 @@ textarea {
   width: 100%;
 }
 
-/* ====== ACTIVITIES LIST ====== */
+/* SECTION: Activities */
 
 .activities-list {
   margin-top: 10px;
@@ -389,8 +402,6 @@ textarea {
   color: var(--text-main);
 }
 
-/* Badges */
-
 .badge {
   display: inline-flex;
   align-items: center;
@@ -421,8 +432,6 @@ textarea {
   color: #fecaca;
 }
 
-/* Registrations list for org */
-
 .registrations-list {
   margin-top: 8px;
   padding-top: 6px;
@@ -448,7 +457,7 @@ textarea {
   white-space: nowrap;
 }
 
-/* ====== MESSAGES & STATES ====== */
+/* SECTION: Messages & States */
 
 .message-area {
   margin-top: 6px;
@@ -469,7 +478,7 @@ textarea {
   color: var(--text-muted);
 }
 
-/* ====== MODAL ====== */
+/* SECTION: Modal */
 
 .modal {
   position: fixed;
@@ -504,7 +513,9 @@ textarea {
   padding: 16px 18px 18px;
   transform: translateY(10px) scale(0.96);
   opacity: 0;
-  transition: opacity var(--transition-med), transform var(--transition-med);
+  transition:
+    opacity var(--transition-med),
+    transform var(--transition-med);
 }
 
 .modal:not(.hidden) .modal-content {
@@ -536,7 +547,9 @@ textarea {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background var(--transition-fast), color var(--transition-fast),
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
     transform var(--transition-fast);
 }
 
@@ -556,7 +569,7 @@ textarea {
   margin-bottom: 10px;
 }
 
-/* ====== TOASTS ====== */
+/* SECTION: Toasts */
 
 .toast-container {
   position: fixed;
@@ -595,13 +608,13 @@ textarea {
   border-color: rgba(59, 130, 246, 0.9);
 }
 
-/* ====== UTILITIES ====== */
+/* SECTION: Utils */
 
 .hidden {
   display: none !important;
 }
 
-/* ====== RESPONSIVE ====== */
+/* SECTION: Responsive */
 
 @media (max-width: 900px) {
   .app-main {

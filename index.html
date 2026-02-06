@@ -8,7 +8,7 @@
 </head>
 <body>
   <div class="app-container">
-    <!-- HEADER -->
+    <!-- SECTION: Header -->
     <header class="app-header">
       <div class="logo">Veiklų registracijos sistema</div>
       <div class="header-right">
@@ -17,9 +17,9 @@
       </div>
     </header>
 
-    <!-- MAIN CONTENT -->
+    <!-- SECTION: Main Content -->
     <main class="app-main">
-      <!-- LOGIN VIEW -->
+      <!-- SECTION: Login -->
       <section id="loginView" class="card">
         <h1 class="card-title">Prisijungimas</h1>
         <p class="card-subtitle">
@@ -31,7 +31,7 @@
           <button id="orgTab" class="tab-button">Organizacija</button>
         </div>
 
-        <!-- User login form -->
+        <!-- Paprasto naudotojo prisijungimas -->
         <form id="userLoginForm" class="form active">
           <div class="form-group">
             <label for="userEmail">El. paštas</label>
@@ -50,7 +50,7 @@
           </p>
         </form>
 
-        <!-- Organization login form -->
+        <!-- Organizacijos prisijungimas -->
         <form id="orgLoginForm" class="form">
           <div class="form-group">
             <label for="orgCode">Organizacijos kodas</label>
@@ -72,14 +72,15 @@
         <div id="loginMessage" class="message-area"></div>
       </section>
 
-      <!-- ORGANIZATION DASHBOARD -->
+      <!-- SECTION: Organization Dashboard -->
       <section id="orgDashboard" class="hidden">
         <div class="layout-two-columns">
-          <!-- Left: form -->
+          <!-- Veiklos forma -->
           <div class="card">
             <h2 class="card-title" id="orgFormTitle">Sukurti naują veiklą</h2>
             <form id="activityForm" class="form">
               <input type="hidden" id="activityId" />
+
               <div class="form-group">
                 <label for="activityTitle">Veiklos pavadinimas</label>
                 <input
@@ -89,6 +90,7 @@
                   required
                 />
               </div>
+
               <div class="form-group">
                 <label for="activityDescription">Veiklos aprašymas</label>
                 <textarea
@@ -98,8 +100,9 @@
                   required
                 ></textarea>
               </div>
+
               <div class="form-group">
-                <label for="activityLocation">Vieta</label>
+                <label for="activityLocation">Veiklos vieta</label>
                 <input
                   type="text"
                   id="activityLocation"
@@ -107,26 +110,29 @@
                   required
                 />
               </div>
+
               <div class="form-row">
                 <div class="form-group">
-                  <label for="activityStartDate">Nuo kurios datos</label>
+                  <label for="activityStartDate">Veikla galioja nuo (diena)</label>
                   <input type="date" id="activityStartDate" required />
                 </div>
                 <div class="form-group">
-                  <label for="activityEndDate">Iki kurios datos</label>
+                  <label for="activityEndDate">Veikla galioja iki (diena)</label>
                   <input type="date" id="activityEndDate" required />
                 </div>
               </div>
+
               <div class="form-row">
                 <div class="form-group">
-                  <label for="activityStartTime">Nuo kurios valandos</label>
+                  <label for="activityStartTime">Veikla vyksta nuo (valanda)</label>
                   <input type="time" id="activityStartTime" required />
                 </div>
                 <div class="form-group">
-                  <label for="activityEndTime">Iki kurios valandos</label>
+                  <label for="activityEndTime">Veikla vyksta iki (valanda)</label>
                   <input type="time" id="activityEndTime" required />
                 </div>
               </div>
+
               <div class="form-group">
                 <label for="activityMaxParticipants">Maksimalus dalyvių skaičius</label>
                 <input
@@ -151,11 +157,12 @@
                   Atšaukti redagavimą
                 </button>
               </div>
+
               <div id="orgFormMessage" class="message-area"></div>
             </form>
           </div>
 
-          <!-- Right: list -->
+          <!-- Veiklų sąrašas -->
           <div class="card">
             <h2 class="card-title">Jūsų sukurtos veiklos</h2>
             <p class="card-subtitle">
@@ -168,7 +175,7 @@
         </div>
       </section>
 
-      <!-- USER ACTIVITIES VIEW -->
+      <!-- SECTION: User Activities -->
       <section id="userView" class="hidden">
         <div class="card">
           <h2 class="card-title">Prieinamos veiklos</h2>
@@ -183,7 +190,7 @@
     </main>
   </div>
 
-  <!-- REGISTRATION MODAL -->
+  <!-- SECTION: Registration Modal -->
   <div id="registrationModal" class="modal hidden">
     <div class="modal-backdrop"></div>
     <div class="modal-content">
@@ -195,15 +202,19 @@
         <p id="modalActivityInfo" class="modal-activity-info"></p>
         <form id="registrationForm" class="form">
           <input type="hidden" id="modalActivityId" />
+
           <div class="form-group">
             <label for="registrationDate">Kurią dieną planuojate dalyvauti?</label>
             <input type="date" id="registrationDate" required />
           </div>
+
           <div class="form-group">
             <label for="registrationTime">Kurią valandą planuojate dalyvauti?</label>
             <input type="time" id="registrationTime" required />
           </div>
+
           <div id="modalMessage" class="message-area"></div>
+
           <div class="form-actions">
             <button type="submit" class="btn btn-primary">
               Patvirtinti registraciją
@@ -217,7 +228,7 @@
     </div>
   </div>
 
-  <!-- TOAST NOTIFICATIONS -->
+  <!-- SECTION: Toast Notifications -->
   <div id="toastContainer" class="toast-container"></div>
 
   <script src="script.js"></script>
