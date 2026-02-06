@@ -1,190 +1,225 @@
 <!DOCTYPE html>
 <html lang="lt">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Flux veiklos – MVP</title>
+<head>
+  <meta charset="UTF-8" />
+  <title>Veiklų registracijos sistema</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="logo">Veiklų registracijos sistema</div>
+      <div class="header-right">
+        <span id="currentUserInfo" class="current-user-info"></span>
+        <button id="logoutBtn" class="btn btn-secondary hidden">Atsijungti</button>
+      </div>
+    </header>
 
-    <link rel="stylesheet" href="style.css" />
+    <!-- MAIN CONTENT -->
+    <main class="app-main">
+      <!-- LOGIN VIEW -->
+      <section id="loginView" class="card">
+        <h1 class="card-title">Prisijungimas</h1>
+        <p class="card-subtitle">
+          Pasirinkite prisijungimo tipą ir įveskite duomenis. Slaptažodžio nereikia.
+        </p>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-
-  <body>
-    <div class="app">
-      <!-- TOAST -->
-      <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
-
-      <!-- HEADER -->
-      <header class="app-header">
-        <div class="brand">
-          <span class="brand-mark"></span>
-          <div class="brand-copy">
-            <h1 class="brand-title">Flux veiklos</h1>
-            <p class="brand-subtitle">Veiklų registracijos MVP</p>
-          </div>
+        <div class="tabs">
+          <button id="userTab" class="tab-button active">Paprastas naudotojas</button>
+          <button id="orgTab" class="tab-button">Organizacija</button>
         </div>
 
-        <div class="session" id="session-info"></div>
-      </header>
+        <!-- User login form -->
+        <form id="userLoginForm" class="form active">
+          <div class="form-group">
+            <label for="userEmail">El. paštas</label>
+            <input
+              type="email"
+              id="userEmail"
+              placeholder="įveskite savo el. paštą"
+              required
+            />
+          </div>
+          <button type="submit" class="btn btn-primary full-width">
+            Prisijungti kaip naudotojas
+          </button>
+          <p class="form-hint">
+            Prisijungus matysite visas prieinamas veiklas ir galėsite registruotis.
+          </p>
+        </form>
 
-      <main class="app-main">
-        <!-- AUTH -->
-        <section class="auth" id="auth-section">
-          <div class="auth-card">
-            <div class="auth-toggle" role="tablist">
-              <button
-                class="auth-toggle-btn is-active"
-                id="user-tab"
-                data-role="user"
-              >
-                Dalyvis
-              </button>
-              <button
-                class="auth-toggle-btn"
-                id="org-tab"
-                data-role="org"
-              >
-                Organizacija
-              </button>
-            </div>
+        <!-- Organization login form -->
+        <form id="orgLoginForm" class="form">
+          <div class="form-group">
+            <label for="orgCode">Organizacijos kodas</label>
+            <input
+              type="text"
+              id="orgCode"
+              placeholder="pvz.: ORG-123"
+              required
+            />
+          </div>
+          <button type="submit" class="btn btn-primary full-width">
+            Prisijungti kaip organizacija
+          </button>
+          <p class="form-hint">
+            Jei įvesite naują kodą, bus sukurta nauja organizacija.
+          </p>
+        </form>
 
-            <!-- USER LOGIN -->
-            <form id="user-login-form" class="auth-form" novalidate>
-              <h2 class="auth-title">Prisijungimas dalyviui</h2>
-              <p class="auth-description">
-                Prisijunk prie organizacijų rengiamų veiklų.
-              </p>
+        <div id="loginMessage" class="message-area"></div>
+      </section>
 
-              <div class="field">
-                <label for="user-email">El. paštas</label>
-                <input
-                  type="email"
-                  id="user-email"
-                  placeholder="tu@example.com"
-                  required
-                />
-                <p class="field-error" data-error-for="user-email"></p>
-              </div>
-
-              <button type="submit" class="btn primary full">
-                Tęsti kaip dalyvis
-              </button>
-            </form>
-
-            <!-- ORG LOGIN -->
-            <form id="org-login-form" class="auth-form is-hidden" novalidate>
-              <h2 class="auth-title">Prisijungimas organizacijai</h2>
-              <p class="auth-description">
-                Naudok organizacijos kodą veiklų valdymui.
-              </p>
-
-              <div class="field">
-                <label for="org-code">Organizacijos kodas</label>
+      <!-- ORGANIZATION DASHBOARD -->
+      <section id="orgDashboard" class="hidden">
+        <div class="layout-two-columns">
+          <!-- Left: form -->
+          <div class="card">
+            <h2 class="card-title" id="orgFormTitle">Sukurti naują veiklą</h2>
+            <form id="activityForm" class="form">
+              <input type="hidden" id="activityId" />
+              <div class="form-group">
+                <label for="activityTitle">Veiklos pavadinimas</label>
                 <input
                   type="text"
-                  id="org-code"
-                  placeholder="ORG-123"
+                  id="activityTitle"
+                  placeholder="įveskite veiklos pavadinimą"
                   required
                 />
-                <p class="field-error" data-error-for="org-code"></p>
               </div>
-
-              <button type="submit" class="btn primary full">
-                Tęsti kaip organizacija
-              </button>
-
-              <p class="helper-text">Demo: ORG-123</p>
-            </form>
-          </div>
-        </section>
-
-        <!-- DASHBOARD -->
-        <section id="dashboard" class="dashboard is-hidden">
-          <!-- ORG PANEL -->
-          <aside class="panel" id="org-panel">
-            <h2 class="panel-title">Organizacijos įrankiai</h2>
-            <p class="panel-description">
-              Kurk ir valdyk veiklas.
-            </p>
-
-            <form id="activity-form" class="activity-form" novalidate>
-              <input type="hidden" id="activity-id" />
-
-              <div class="field">
-                <label for="activity-title">Pavadinimas</label>
-                <input id="activity-title" required />
+              <div class="form-group">
+                <label for="activityDescription">Veiklos aprašymas</label>
+                <textarea
+                  id="activityDescription"
+                  placeholder="trumpai aprašykite veiklą"
+                  rows="3"
+                  required
+                ></textarea>
               </div>
-
-              <div class="field">
-                <label for="max-participants">Dalyvių limitas</label>
+              <div class="form-group">
+                <label for="activityLocation">Vieta</label>
+                <input
+                  type="text"
+                  id="activityLocation"
+                  placeholder="pvz.: Vilnius, Kaunas..."
+                  required
+                />
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="activityStartDate">Nuo kurios datos</label>
+                  <input type="date" id="activityStartDate" required />
+                </div>
+                <div class="form-group">
+                  <label for="activityEndDate">Iki kurios datos</label>
+                  <input type="date" id="activityEndDate" required />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="activityStartTime">Nuo kurios valandos</label>
+                  <input type="time" id="activityStartTime" required />
+                </div>
+                <div class="form-group">
+                  <label for="activityEndTime">Iki kurios valandos</label>
+                  <input type="time" id="activityEndTime" required />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="activityMaxParticipants">Maksimalus dalyvių skaičius</label>
                 <input
                   type="number"
-                  id="max-participants"
+                  id="activityMaxParticipants"
+                  min="1"
+                  step="1"
+                  placeholder="pvz.: 20"
                   required
                 />
               </div>
 
               <div class="form-actions">
-                <button class="btn primary">
-                  Sukurti veiklą
+                <button type="submit" class="btn btn-primary">
+                  Išsaugoti veiklą
+                </button>
+                <button
+                  type="button"
+                  id="cancelEditBtn"
+                  class="btn btn-ghost hidden"
+                >
+                  Atšaukti redagavimą
                 </button>
               </div>
+              <div id="orgFormMessage" class="message-area"></div>
             </form>
-          </aside>
+          </div>
 
-          <!-- CONTENT -->
-          <section class="content">
-            <header class="content-header">
-              <div>
-                <h2 class="content-title">Veiklos</h2>
-                <p class="content-subtitle">
-                  Pasirinkite veiklą ir užsiregistruokite
-                </p>
-              </div>
-            </header>
-
-            <div id="activity-list" class="activity-grid"></div>
-          </section>
-        </section>
-      </main>
-
-      <footer class="app-footer">
-        <p>Duomenys saugomi tik naršyklėje (localStorage).</p>
-      </footer>
-    </div>
-
-    <!-- REGISTRACIJOS MODALAS (NAUJAS, BET FLUX STILIUS) -->
-    <div id="register-modal" class="modal is-hidden">
-      <div class="modal-card">
-        <h3 class="modal-title">Registracija į veiklą</h3>
-
-        <div class="field">
-          <label>Pasirinkite datą</label>
-          <input type="date" id="reg-date" />
+          <!-- Right: list -->
+          <div class="card">
+            <h2 class="card-title">Jūsų sukurtos veiklos</h2>
+            <p class="card-subtitle">
+              Čia matysite visas veiklas ir jose užsiregistravusius dalyvius.
+            </p>
+            <div id="orgActivitiesList" class="activities-list empty-state">
+              Šiuo metu dar nesukūrėte jokių veiklų.
+            </div>
+          </div>
         </div>
+      </section>
 
-        <div class="field">
-          <label>Pasirinkite laiką</label>
-          <input type="time" id="reg-time" />
+      <!-- USER ACTIVITIES VIEW -->
+      <section id="userView" class="hidden">
+        <div class="card">
+          <h2 class="card-title">Prieinamos veiklos</h2>
+          <p class="card-subtitle">
+            Pasirinkite jus dominančią veiklą ir užsiregistruokite.
+          </p>
+          <div id="userActivitiesList" class="activities-list empty-state">
+            Šiuo metu nėra prieinamų veiklų.
+          </div>
         </div>
+      </section>
+    </main>
+  </div>
 
-        <div class="modal-actions">
-          <button class="btn primary" id="confirm-register">
-            Patvirtinti
-          </button>
-          <button class="btn subtle" id="cancel-register">
-            Atšaukti
-          </button>
-        </div>
+  <!-- REGISTRATION MODAL -->
+  <div id="registrationModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Registracija į veiklą</h3>
+        <button id="modalCloseBtn" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="modalActivityInfo" class="modal-activity-info"></p>
+        <form id="registrationForm" class="form">
+          <input type="hidden" id="modalActivityId" />
+          <div class="form-group">
+            <label for="registrationDate">Kurią dieną planuojate dalyvauti?</label>
+            <input type="date" id="registrationDate" required />
+          </div>
+          <div class="form-group">
+            <label for="registrationTime">Kurią valandą planuojate dalyvauti?</label>
+            <input type="time" id="registrationTime" required />
+          </div>
+          <div id="modalMessage" class="message-area"></div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+              Patvirtinti registraciją
+            </button>
+            <button type="button" id="modalCancelBtn" class="btn btn-ghost">
+              Atšaukti
+            </button>
+          </div>
+        </form>
       </div>
     </div>
+  </div>
 
-    <script src="script.js"></script>
-  </body>
+  <!-- TOAST NOTIFICATIONS -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="script.js"></script>
+</body>
 </html>
