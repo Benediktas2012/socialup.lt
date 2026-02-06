@@ -1,534 +1,181 @@
-// SECTION: Storage helpers
-const STORAGE_KEY = "activitiesData";
-const USERS_KEY = "usersData";
-const CURRENT_USER_KEY = "currentUser";
+let editId = null;
 
-// Load activities array from localStorage
-function loadActivities() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed;
-    return [];
-  } catch (e) {
-    return [];
-  }
-}
+/* LOGIN */
+function login(){
+  const val = document.getElementById("loginInput").value.trim();
+  if(!val) return alert("Įveskite gmail arba ORG kodą");
 
-// Save activities array to localStorage
-function saveActivities(activities) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(activities));
-}
+  let orgs = JSON.parse(localStorage.getItem("orgs")) || {};
 
-// Users helpers
-function loadUsers() {
-  const raw = localStorage.getItem(USERS_KEY);
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed;
-    return [];
-  } catch {
-    return [];
-  }
-}
-
-function saveUsers(users) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-}
-
-function loadCurrentUser() {
-  const raw = localStorage.getItem(CURRENT_USER_KEY);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-
-function saveCurrentUser(user) {
-  if (!user) {
-    localStorage.removeItem(CURRENT_USER_KEY);
+  if(val.startsWith("ORG-")){
+    if(!orgs[val]){
+      const name = prompt("Organizacijos pavadinimas:");
+      if(!name) return;
+      orgs[val] = { name, activities: [] };
+      localStorage.setItem("orgs", JSON.stringify(orgs));
+    }
+    localStorage.setItem("role","org");
+    localStorage.setItem("orgCode",val);
   } else {
-    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+    if(!val.includes("@")) return alert("Įveskite galiojantį gmail");
+    localStorage.setItem("role","user");
+    localStorage.setItem("userEmail",val);
   }
+  location.reload();
 }
 
-// Generate simple unique id for activities
-function generateId() {
-  return "act_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+function logout(){
+  localStorage.removeItem("role");
+  localStorage.removeItem("orgCode");
+  localStorage.removeItem("userEmail");
+  location.reload();
 }
 
-// SECTION: Date / Time helpers
-// Validate date range (YYYY-MM-DD)
-function isDateRangeValid(from, to) {
-  if (!from || !to) return false;
-  return new Date(from) <= new Date(to);
+function getOrgs(){
+  return JSON.parse(localStorage.getItem("orgs")) || {};
+}
+function saveOrgs(orgs){
+  localStorage.setItem("orgs", JSON.stringify(orgs));
 }
 
-// Validate time range (HH:MM, 24h)
-function isTimeRangeValid(from, to) {
-  if (!from || !to) return false;
-  return from < to; // string comparison works for 24h format
-}
+/* SAVE / EDIT */
+document.getElementById("saveBtn").onclick = () => {
+  const orgCode = localStorage.getItem("orgCode");
+  const orgs = getOrgs();
+  const org = orgs[orgCode];
 
-// Check if a date is within [from, to]
-function isDateWithinRange(date, from, to) {
-  const d = new Date(date);
-  return d >= new Date(from) && d <= new Date(to);
-}
+  const title = document.getElementById("title").value;
+  const dateFrom = document.getElementById("dateFrom").value;
+  const dateTo = document.getElementById("dateTo").value;
+  const timeFrom = document.getElementById("timeFrom").value;
+  const timeTo = document.getElementById("timeTo").value;
+  const age = document.getElementById("age").value;
+  const max = document.getElementById("maxParticipants").value;
+  const description = document.getElementById("description").value;
+  const location = document.getElementById("locationInput").value;
 
-// Check if time is within [from, to]
-function isTimeWithinRange(time, from, to) {
-  return time >= from && time <= to;
-}
+  if(!title || !dateFrom || !dateTo || !timeFrom || !timeTo)
+    return alert("Užpildyk visus laukus");
 
-// SECTION: Global state
-let activitiesState = loadActivities();
-let usersState = loadUsers();
-let currentUser = loadCurrentUser();
-let currentRegistrationActivityId = null;
-let currentRegistrationActivity = null;
+  if(new Date(dateFrom) > new Date(dateTo))
+    return alert("Data 'nuo' negali būti vėlesnė už 'iki'");
 
-// SECTION: DOM references
-// Auth
-const registerForm = document.getElementById("register-form");
-const registerErrorEl = document.getElementById("register-error");
-const loginForm = document.getElementById("login-form");
-const loginErrorEl = document.getElementById("login-error");
-const currentUserLabel = document.getElementById("current-user-label");
-const logoutBtn = document.getElementById("logout-btn");
-
-// Organization form
-const activityForm = document.getElementById("activity-form");
-const activityErrorEl = document.getElementById("activity-error");
-const orgActivitiesList = document.getElementById("org-activities-list");
-
-// Filter
-const filterOrgInput = document.getElementById("filter-org-code");
-const applyFilterBtn = document.getElementById("apply-filter");
-
-// User view
-const userActivitiesList = document.getElementById("user-activities-list");
-
-// Modal elements
-const modal = document.getElementById("registration-modal");
-const modalActivityTitle = document.getElementById("modal-activity-title");
-const registrationForm = document.getElementById("registration-form");
-const registrationErrorEl = document.getElementById("registration-error");
-const regEmailInput = document.getElementById("reg-email");
-const regDateInput = document.getElementById("reg-date");
-const regTimeInput = document.getElementById("reg-time");
-
-// Template
-const activityTemplate = document.getElementById("activity-template");
-
-// SECTION: Rendering
-function renderAll() {
-  updateAuthUI();
-  renderActivitiesForOrg();
-  renderActivitiesForUser();
-}
-
-// Create a DOM card from template
-function createActivityCard(activity, forOrgView) {
-  const node = activityTemplate.content.firstElementChild.cloneNode(true);
-
-  const titleEl = node.querySelector(".activity-title");
-  const orgEl = node.querySelector(".activity-org");
-  const descEl = node.querySelector(".activity-description");
-  const locEl = node.querySelector(".activity-location");
-  const datesEl = node.querySelector(".activity-dates");
-  const timesEl = node.querySelector(".activity-times");
-  const capEl = node.querySelector(".activity-capacity");
-  const freeSlotsEl = node.querySelector(".activity-free-slots");
-  const regBtn = node.querySelector(".btn-register");
-  const registrationsDetails = node.querySelector(".activity-registrations");
-  const tbody = node.querySelector("tbody");
-
-  titleEl.textContent = activity.title;
-  orgEl.textContent = "Organizacijos kodas: " + activity.organizationCode;
-  descEl.textContent = activity.description;
-  locEl.textContent = "Vieta: " + activity.location;
-  datesEl.textContent =
-    "Veikla galioja: " + activity.dateFrom + " – " + activity.dateTo;
-  timesEl.textContent =
-    "Veikla vyksta: " + activity.timeFrom + " – " + activity.timeTo;
-
-  const used = activity.registrations.length;
-  const free = Math.max(0, Number(activity.maxParticipants) - used);
-  capEl.textContent =
-    "Maksimalus dalyvių skaičius: " +
-    activity.maxParticipants +
-    " (užimta: " +
-    used +
-    ", laisvų: " +
-    free +
-    ")";
-
-  freeSlotsEl.textContent = "Laisvų vietų: " + free;
-
-  // Fill registrations table for organization view
-  tbody.innerHTML = "";
-  activity.registrations.forEach((reg) => {
-    const tr = document.createElement("tr");
-    const tdEmail = document.createElement("td");
-    const tdDate = document.createElement("td");
-    const tdTime = document.createElement("td");
-
-    tdEmail.textContent = reg.email;
-    tdDate.textContent = reg.selectedDate;
-    tdTime.textContent = reg.selectedTime;
-
-    tr.appendChild(tdEmail);
-    tr.appendChild(tdDate);
-    tr.appendChild(tdTime);
-    tbody.appendChild(tr);
-  });
-
-  // If full, disable button
-  if (free <= 0) {
-    regBtn.disabled = true;
-    regBtn.textContent = "Vietų nebeliko";
-  }
-
-  // Hide registrations section for user view
-  if (!forOrgView) {
-    registrationsDetails.style.display = "none";
-  }
-
-  // Attach registration handler
-  regBtn.addEventListener("click", () => openRegistrationModal(activity.id));
-
-  return node;
-}
-
-// Render organization activities
-function renderActivitiesForOrg() {
-  orgActivitiesList.innerHTML = "";
-  const filterCode = filterOrgInput.value.trim();
-  let list = activitiesState;
-  if (filterCode) {
-    list = list.filter((a) => a.organizationCode === filterCode);
-  }
-
-  if (list.length === 0) {
-    const p = document.createElement("p");
-    p.textContent = "Veiklų nėra.";
-    orgActivitiesList.appendChild(p);
-    return;
-  }
-
-  list.forEach((activity) => {
-    const card = createActivityCard(activity, true);
-    orgActivitiesList.appendChild(card);
-  });
-}
-
-// Render user activities
-function renderActivitiesForUser() {
-  userActivitiesList.innerHTML = "";
-
-  if (activitiesState.length === 0) {
-    const p = document.createElement("p");
-    p.textContent = "Šiuo metu veiklų nėra.";
-    userActivitiesList.appendChild(p);
-    return;
-  }
-
-  activitiesState.forEach((activity) => {
-    const card = createActivityCard(activity, false);
-    userActivitiesList.appendChild(card);
-  });
-}
-
-// SECTION: Activity creation handler
-activityForm.addEventListener("submit", (e) => {
-  if (!currentUser || currentUser.role !== "organization") {
-    activityErrorEl.textContent = "Tik prisijungusios organizacijos gali kurti veiklas.";
-    e.preventDefault();
-    return;
-  }
-
-  e.preventDefault();
-  activityErrorEl.textContent = "";
-
-  const organizationCode = document.getElementById("org-code").value.trim();
-  const title = document.getElementById("title").value.trim();
-  const description = document.getElementById("description").value.trim();
-  const location = document.getElementById("location").value.trim();
-  const dateFrom = document.getElementById("date-from").value;
-  const dateTo = document.getElementById("date-to").value;
-  const timeFrom = document.getElementById("time-from").value;
-  const timeTo = document.getElementById("time-to").value;
-  const maxParticipantsRaw = document.getElementById("max-participants").value;
-
-  // All required fields check
-  if (
-    !organizationCode ||
-    !title ||
-    !description ||
-    !location ||
-    !dateFrom ||
-    !dateTo ||
-    !timeFrom ||
-    !timeTo ||
-    !maxParticipantsRaw
-  ) {
-    activityErrorEl.textContent = "Prašome užpildyti visus privalomus laukus.";
-    return;
-  }
-
-  const maxParticipants = Number(maxParticipantsRaw);
-  if (!Number.isInteger(maxParticipants) || maxParticipants <= 0) {
-    activityErrorEl.textContent =
-      "Maksimalus dalyvių skaičius turi būti teigiamas sveikas skaičius.";
-    return;
-  }
-
-  if (!isDateRangeValid(dateFrom, dateTo)) {
-    activityErrorEl.textContent =
-      "Data „nuo“ negali būti vėlesnė už datą „iki“.";
-    return;
-  }
-
-  if (!isTimeRangeValid(timeFrom, timeTo)) {
-    activityErrorEl.textContent =
-      "Laikas „nuo“ turi būti ankstesnis už laiką „iki“.";
-    return;
-  }
-
-  const newActivity = {
-    id: generateId(),
-    organizationCode,
+  const data = {
+    id: editId || Date.now(),
     title,
-    description,
-    location,
     dateFrom,
     dateTo,
     timeFrom,
     timeTo,
-    maxParticipants,
-    registrations: [],
+    age,
+    maxParticipants: Number(max) || 0,
+    description,
+    location,
+    registered: editId
+      ? org.activities.find(a=>a.id===editId).registered
+      : []
   };
 
-  activitiesState.push(newActivity);
-  saveActivities(activitiesState);
-
-  // Reset form after successful creation
-  activityForm.reset();
-
-  // Immediately update UI
-  renderAll();
-});
-
-// Filter handler
-applyFilterBtn.addEventListener("click", () => {
-  renderActivitiesForOrg();
-});
-
-// SECTION: Modal logic
-function openRegistrationModal(activityId) {
-  registrationErrorEl.textContent = "";
-  registrationForm.reset();
-
-  const activity = activitiesState.find((a) => a.id === activityId);
-  if (!activity) return;
-
-  currentRegistrationActivityId = activityId;
-  currentRegistrationActivity = activity;
-
-  modalActivityTitle.textContent = "Registracija į veiklą: " + activity.title;
-
-  // Limit selectable date/time in modal to activity range
-  regDateInput.min = activity.dateFrom;
-  regDateInput.max = activity.dateTo;
-  regTimeInput.min = activity.timeFrom;
-  regTimeInput.max = activity.timeTo;
-
-  modal.classList.add("open");
-  modal.setAttribute("aria-hidden", "false");
-}
-
-function closeRegistrationModal() {
-  modal.classList.remove("open");
-  modal.setAttribute("aria-hidden", "true");
-  currentRegistrationActivityId = null;
-  currentRegistrationActivity = null;
-}
-
-// Close modal on backdrop or close button
-document.querySelectorAll("[data-close-modal]").forEach((el) => {
-  el.addEventListener("click", closeRegistrationModal);
-});
-
-// Close on Escape
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && modal.classList.contains("open")) {
-    closeRegistrationModal();
-  }
-});
-
-// SECTION: Registration submit handler
-registrationForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-  registrationErrorEl.textContent = "";
-
-  if (!currentRegistrationActivityId) {
-    registrationErrorEl.textContent = "Įvyko klaida. Bandykite dar kartą.";
-    return;
-  }
-
-  const email = regEmailInput.value.trim();
-  const selectedDate = regDateInput.value;
-  const selectedTime = regTimeInput.value;
-
-  if (!email || !selectedDate || !selectedTime) {
-    registrationErrorEl.textContent = "Prašome užpildyti visus laukus.";
-    return;
-  }
-
-  const activity = activitiesState.find(
-    (a) => a.id === currentRegistrationActivityId
-  );
-  if (!activity) {
-    registrationErrorEl.textContent = "Veikla nerasta.";
-    return;
-  }
-
-  const used = activity.registrations.length;
-  const free = Number(activity.maxParticipants) - used;
-  if (free <= 0) {
-    registrationErrorEl.textContent =
-      "Registracija negalima, nes veikla jau pilna.";
-    return;
-  }
-
-  // Validate selected date/time within allowed range
-  if (!isDateWithinRange(selectedDate, activity.dateFrom, activity.dateTo)) {
-    registrationErrorEl.textContent =
-      "Pasirinkta diena nepatenka į leidžiamą datų intervalą.";
-    return;
-  }
-
-  if (!isTimeWithinRange(selectedTime, activity.timeFrom, activity.timeTo)) {
-    registrationErrorEl.textContent =
-      "Pasirinkta valanda nepatenka į leidžiamą laikų intervalą.";
-    return;
-  }
-
-  // Block double registration by same email to same activity
-  const alreadyRegistered = activity.registrations.some(
-    (r) => r.email.toLowerCase() === email.toLowerCase()
-  );
-  if (alreadyRegistered) {
-    registrationErrorEl.textContent =
-      "Šis el. paštas jau užregistruotas į šią veiklą.";
-    return;
-  }
-
-  const newRegistration = {
-    email,
-    selectedDate,
-    selectedTime,
-  };
-
-  activity.registrations.push(newRegistration);
-
-  // Persist and refresh UI
-  saveActivities(activitiesState);
-  renderAll();
-
-  closeRegistrationModal();
-});
-
-// SECTION: Auth logic
-function updateAuthUI() {
-  if (!currentUser) {
-    currentUserLabel.textContent = "Neprisijungta";
-    logoutBtn.style.display = "none";
+  if(editId){
+    org.activities = org.activities.map(a=>a.id===editId?data:a);
+    editId=null;
+    document.getElementById("saveBtn").textContent="Išsaugoti veiklą";
   } else {
-    const roleLabel =
-      currentUser.role === "organization" ? "Organizacija" : "Naudotojas";
-    currentUserLabel.textContent = roleLabel + ": " + currentUser.email;
-    logoutBtn.style.display = "inline-flex";
+    org.activities.push(data);
   }
 
-  // Show/hide organization activity creation form based on role
-  if (currentUser && currentUser.role === "organization") {
-    activityForm.closest(".card").style.display = "block";
-  } else {
-    activityForm.closest(".card").style.display = "none";
-  }
+  saveOrgs(orgs);
+  clearForm();
+  render();
+};
+
+function clearForm(){
+  ["title","dateFrom","dateTo","timeFrom","timeTo","age","maxParticipants","description","locationInput"]
+    .forEach(id=>document.getElementById(id).value="");
 }
 
-// Registration (account) form
-registerForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-  registerErrorEl.textContent = "";
+/* EDIT / DELETE */
+function editActivity(id){
+  const org = getOrgs()[localStorage.getItem("orgCode")];
+  const a = org.activities.find(a=>a.id===id);
 
-  const role = document.getElementById("reg-role").value;
-  const email = document.getElementById("reg-user-email").value.trim();
-  const password = document.getElementById("reg-password").value;
+  title.value=a.title;
+  dateFrom.value=a.dateFrom;
+  dateTo.value=a.dateTo;
+  timeFrom.value=a.timeFrom;
+  timeTo.value=a.timeTo;
+  age.value=a.age;
+  maxParticipants.value=a.maxParticipants;
+  description.value=a.description;
+  locationInput.value=a.location;
 
-  if (!role || !email || !password) {
-    registerErrorEl.textContent = "Prašome užpildyti visus laukus.";
-    return;
-  }
+  editId=id;
+  saveBtn.textContent="Išsaugoti pakeitimus";
+}
 
-  const exists = usersState.some(
-    (u) => u.email.toLowerCase() === email.toLowerCase() && u.role === role
-  );
-  if (exists) {
-    registerErrorEl.textContent = "Toks naudotojas jau egzistuoja šiuo vaidmeniu.";
-    return;
-  }
+function deleteActivity(id){
+  if(!confirm("Ištrinti veiklą?")) return;
+  const orgs = getOrgs();
+  const org = orgs[localStorage.getItem("orgCode")];
+  org.activities = org.activities.filter(a=>a.id!==id);
+  saveOrgs(orgs);
+  render();
+}
 
-  const newUser = { email, password, role };
-  usersState.push(newUser);
-  saveUsers(usersState);
-  registerForm.reset();
-});
+/* REGISTER */
+function register(orgCode,id){
+  const email = localStorage.getItem("userEmail");
+  const orgs = getOrgs();
+  const a = orgs[orgCode].activities.find(a=>a.id===id);
 
-// Login form
-loginForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-  loginErrorEl.textContent = "";
+  if(a.registered.some(r=>r.email===email))
+    return alert("Jau esate užsiregistravęs");
 
-  const role = document.getElementById("login-role").value;
-  const email = document.getElementById("login-email").value.trim();
-  const password = document.getElementById("login-password").value;
+  if(a.maxParticipants && a.registered.length>=a.maxParticipants)
+    return alert("Vietų nebėra");
 
-  if (!role || !email || !password) {
-    loginErrorEl.textContent = "Prašome užpildyti visus laukus.";
-    return;
-  }
+  const day = prompt("Kurią dieną ateisi? (YYYY-MM-DD)");
+  const time = prompt("Kurią valandą? (HH:MM)");
 
-  const user = usersState.find(
-    (u) =>
-      u.role === role &&
-      u.email.toLowerCase() === email.toLowerCase() &&
-      u.password === password
-  );
+  if(!day || isNaN(new Date(day))) return alert("Neteisinga data");
+  if(!/^\d{2}:\d{2}$/.test(time)) return alert("Neteisingas laikas");
 
-  if (!user) {
-    loginErrorEl.textContent = "Neteisingi prisijungimo duomenys.";
-    return;
-  }
+  a.registered.push({email,day,time});
+  saveOrgs(orgs);
+  render();
+}
 
-  currentUser = { email: user.email, role: user.role };
-  saveCurrentUser(currentUser);
-  loginForm.reset();
-  updateAuthUI();
-});
+/* RENDER */
+function render(){
+  const container = document.getElementById("activitiesContainer");
+  container.innerHTML="";
 
-logoutBtn.addEventListener("click", () => {
-  currentUser = null;
-  saveCurrentUser(null);
-  updateAuthUI();
-});
+  const role = localStorage.getItem("role");
+  document.getElementById("orgPanel").style.display = role==="org"?"block":"none";
 
-// SECTION: Initial render
-renderAll();
+  Object.entries(getOrgs()).forEach(([code,org])=>{
+    org.activities.forEach(a=>{
+      container.innerHTML+=`
+      <div class="card">
+        <h3>${a.title}</h3>
+        <p><b>🏢 ${org.name}</b></p>
+        <p>📆 ${a.dateFrom} – ${a.dateTo}</p>
+        <p>⏰ ${a.timeFrom} – ${a.timeTo}</p>
+        <p>${a.description}</p>
+        <p>👥 ${a.registered.length}${a.maxParticipants?"/"+a.maxParticipants:""}</p>
+        <p>${a.registered.map(r=>`${r.email} (${r.day} ${r.time})`).join("<br>")}</p>
+        ${role==="user"?`<button onclick="register('${code}',${a.id})">Registruotis</button>`:""}
+        ${role==="org" && localStorage.getItem("orgCode")===code?
+        `<button class="edit-btn" onclick="editActivity(${a.id})">✏️</button>
+         <button class="delete-btn" onclick="deleteActivity(${a.id})">🗑️</button>`:""}
+      </div>`;
+    });
+  });
+}
+
+/* START */
+if(localStorage.getItem("role")){
+  loginSection.style.display="none";
+  activitiesSection.style.display="block";
+  render();
+}
